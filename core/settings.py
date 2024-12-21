@@ -8,8 +8,9 @@ from sentry_sdk.integrations.logging import LoggingIntegration
 
 from pathlib import Path
 from django.utils.translation import gettext_lazy as _
-# from decouple import config
-SENTRY_SDK="https://43f88d64a18e48a7307150c375c4b55e@o4508489036201984.ingest.us.sentry.io/4508489040396288"
+from decouple import config
+
+SENTRY_SDK=config("SENTRY_SDK")
 # BASE
 # --------------------------------------------------------------------------
 
@@ -40,6 +41,10 @@ DJANGO_APPS = [
 EXTERNAL_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
+    # 'drf_spectacular',
+    'django_redis',
+    # 'drf_yasg',
+    'django_celery_beat',
 ]
 
 LOCAL_APPS = [
@@ -69,7 +74,7 @@ ROOT_URLCONF = "core.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -171,17 +176,15 @@ AUTH_USER_MODEL = 'user.User'
 # -----------------------------------------------------------------------------------------
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.BasicAuthentication',
-        'rest_framework.authentication.TokenAuthentication',
-        # 'users.authentications.CustomJWTAuthentication',
-    ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
     ],
-    'DATETIME_FORMAT': '%Y-%m-%d %H:%M:%S',
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
-    'PAGE_SIZE': 10,
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+        'user.authentications.CustomJWTAuthentication',
+        'user.authentications.CustomBasicAuthentication',
+    ],
 }
 
 # JWT
@@ -235,10 +238,23 @@ SPECTACULAR_SETTINGS = {
 
 # REDIS
 # -----------------------------------------------------------------------------------------
+REDIS_HOST = config('REDIS_HOST', default='localhost')
+REDIS_PORT = config('REDIS_PORT', default='6379')
+REDIS_DB = config('REDIS_DB', default='1')
 
+REDIS_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}'
 
 # CACHES
 # -----------------------------------------------------------------------------------------
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': REDIS_URL,
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        }
+    }
+}
 
 
 # CHANNELS
@@ -247,6 +263,18 @@ SPECTACULAR_SETTINGS = {
 
 # CELERY
 # -----------------------------------------------------------------------------------------
+if USE_TZ:
+    CELERY_TIMEZONE = 'Asia/Tashkent'
+
+CELERY_BROKER_URL = REDIS_URL
+CELERY_RESULT_BACKEND = REDIS_URL
+CELERY_RESULT_EXTENDED = True
+CELERY_RESULT_BACKEND_ALWAYS_RETRY = True
+CELERY_RESULT_BACKEND_MAX_RETRIES = 10
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_WORKER_SEND_TASK_EVENTS = True
 
 
 # SENTRY SDK
@@ -280,7 +308,12 @@ sentry_sdk.init(
 
 # EMAIL
 # -----------------------------------------------------------------------------------------
-
+EMAIL_BACKEND = config('EMAIL_BACKEND', default='')
+EMAIL_HOST = config('EMAIL_HOST', default='')
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', default='')
+EMAIL_PORT = config('EMAIL_PORT', default='')
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 
 # ELASTICSEARCH
 # -----------------------------------------------------------------------------------------
