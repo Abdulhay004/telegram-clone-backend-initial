@@ -10,6 +10,7 @@ from pathlib import Path
 from django.utils.translation import gettext_lazy as _
 from decouple import config
 
+
 SENTRY_SDK=config("SENTRY_SDK")
 # BASE
 # --------------------------------------------------------------------------
@@ -41,7 +42,7 @@ DJANGO_APPS = [
 EXTERNAL_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
-    # 'drf_spectacular',
+    'drf_spectacular',
     'django_redis',
     # 'drf_yasg',
     'django_celery_beat',
