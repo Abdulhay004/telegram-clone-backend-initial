@@ -11,7 +11,7 @@ from django.utils.translation import gettext_lazy as _
 from decouple import config
 
 
-SENTRY_SDK=config("SENTRY_SDK")
+SENTRY_SDK="https://43f88d64a18e48a7307150c375c4b55e@o4508489036201984.ingest.us.sentry.io/4508489040396288"
 # BASE
 # --------------------------------------------------------------------------
 
