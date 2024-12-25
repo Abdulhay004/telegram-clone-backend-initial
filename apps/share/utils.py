@@ -3,9 +3,8 @@ import string
 import time
 import redis
 from django.conf import settings
-
-from unittest.mock import Mock
-redis_conn_m = Mock()
+from django.contrib.auth.hashers import check_password
+from django.utils.translation import gettext_lazy as _
 
 from django.utils.crypto import get_random_string
 from django.contrib.auth.hashers import make_password
@@ -39,21 +38,26 @@ def generate_otp(phone_number: str,
 
 
 def check_otp(phone_number: str, otp_code: str, otp_secret: str) -> None:
-    # # Redis'dan ma'lumotlarni olish uchun mock qilish
+    # Redis'dan ma'lumotlarni olish uchun mock qilish
     # redis_conn.get.side_effect = lambda key: {
     #     f"{phone_number}:otp": otp_code,
     #     f"{phone_number}:otp_secret": otp_secret
     # }.get(key)
-    stored_otp = redis_conn.get(f"{phone_number}:otp")
-    stored_secret = redis_conn.get(f"{phone_number}:otp_secret")
-
-    if stored_otp is None or stored_secret is None:
-        raise ValueError("OTP yoki maxfiy kalit topilmadi.")
-
-    stored_otp = stored_otp.decode('utf-8')
-    stored_secret = stored_secret.decode('utf-8')
-
-    # Taqqoslash
-    if stored_otp != otp_code or stored_secret != otp_secret:
-        raise ValueError("OTP kod yoki maxfiy kalit noto'g'ri.")
+    # stored_otp = redis_conn.get(f"{phone_number}:otp")
+    # stored_secret = redis_conn.get(f"{phone_number}:otp_secret")
+    #
+    # if stored_otp is None or stored_secret is None:
+    #     raise ValueError("OTP yoki maxfiy kalit topilmadi.")
+    #
+    # stored_otp = stored_otp.decode('utf-8')
+    # stored_secret = stored_secret.decode('utf-8')
+    #
+    # # Taqqoslash
+    # if stored_otp != otp_code or stored_secret != otp_secret:
+    #     raise ValueError("OTP kod yoki maxfiy kalit noto'g'ri.")
+    stored_hash: bytes = redis_conn.get(f"{phone_number}:otp")
+    if not stored_hash or not check_password(
+        f'{otp_secret}:{otp_code}', str(stored_hash)
+    ):
+        raise ValidationError(_(f"invalid OTP code. {not stored_hash}"), 400)
 

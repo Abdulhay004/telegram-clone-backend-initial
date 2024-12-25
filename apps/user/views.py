@@ -13,6 +13,7 @@ from .services import UserService
 
 from share.utils import check_otp
 
+from rest_framework.exceptions import ValidationError
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -36,6 +37,18 @@ class SignUpView(generics.CreateAPIView):
         if User.objects.filter(is_verified=True).exists():
             return Response({"detail":"Phone number already exist."}, status=400)
 
+        otp_code, otp_secret = generate_otp(
+                phone_number=phone_number,
+                expire_in=2 * 60,
+                check_if_exists=False
+            )
+
+        # OTP secret ni Redisga saqlash
+        if redis_conn is None:
+               return Response({"redis_conn is not initialized."})
+        else:
+            redis_conn.setex(phone_number, 120, otp_secret)
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
@@ -50,10 +63,10 @@ class VerifyView(APIView):
     def patch(self, request, otp_secret):
         serializer = VerifyOTPSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        phone_number = serializer.validated_data['phone_number']
+        otp_code = serializer.validated_data['otp_code']
 
         try:
-            phone_number = serializer.validated_data['phone_number']
-            otp_code = serializer.validated_data['otp_code']
             user = User.objects.filter(phone_number=phone_number).first()
         except Exception as e:
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)

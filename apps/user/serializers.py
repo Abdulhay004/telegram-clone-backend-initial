@@ -32,8 +32,13 @@ class SignUpSerializer(serializers.ModelSerializer):
 class VerifyOTPSerializer(serializers.Serializer):
     phone_number = serializers.CharField(required=True)
     otp_code = serializers.CharField(required=True)
+    # otp_secret = serializers.CharField(required=True)
 
     def validate(self, attrs):
+        # phone_number = attrs.get('phone_number')
+        # otp_code = attrs.get('otp_code')
+        # otp_secret = attrs.get('otp_secret')
+        # check_otp(phone_number, otp_code, otp_secret)
 
         return attrs
 

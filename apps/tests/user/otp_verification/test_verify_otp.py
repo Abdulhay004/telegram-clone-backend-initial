@@ -149,6 +149,7 @@ def test_verify_otp(verify_otp_data, api_client, mocker):
         data=return_data["req_json"],
         format="json",
     )
+    print(resp.data)
     assert resp.status_code == status_code
 
     if status_code == 200:
