@@ -4,6 +4,9 @@ import time
 import redis
 from django.conf import settings
 
+from unittest.mock import Mock
+redis_conn_m = Mock()
+
 from django.utils.crypto import get_random_string
 from django.contrib.auth.hashers import make_password
 from rest_framework.exceptions import ValidationError
@@ -35,20 +38,22 @@ def generate_otp(phone_number: str,
     return otp_code, secret_token
 
 
+def check_otp(phone_number: str, otp_code: str, otp_secret: str) -> None:
+    # # Redis'dan ma'lumotlarni olish uchun mock qilish
+    # redis_conn.get.side_effect = lambda key: {
+    #     f"{phone_number}:otp": otp_code,
+    #     f"{phone_number}:otp_secret": otp_secret
+    # }.get(key)
+    stored_otp = redis_conn.get(f"{phone_number}:otp")
+    stored_secret = redis_conn.get(f"{phone_number}:otp_secret")
 
+    if stored_otp is None or stored_secret is None:
+        raise ValueError("OTP yoki maxfiy kalit topilmadi.")
 
+    stored_otp = stored_otp.decode('utf-8')
+    stored_secret = stored_secret.decode('utf-8')
 
+    # Taqqoslash
+    if stored_otp != otp_code or stored_secret != otp_secret:
+        raise ValueError("OTP kod yoki maxfiy kalit noto'g'ri.")
 
-    # if check_if_exists and phone_number in otp_storage:
-    #     # Agar OTP mavjud bo'lsa va muddat o'tmagan bo'lsa, qaytarish
-    #     stored_otp, timestamp = otp_storage[phone_number]
-    #     if time.time() - timestamp < expire_in:
-    #         return stored_otp, "OTP already exists and is valid."
-    # # Yangi OTP yaratish
-    # otp_code = ''.join(random.choices(string.digits, k=6))  # 6 raqamli OTP
-    # otp_secret = ''.join(random.choices(string.ascii_letters + string.digits, k=16))  # 16 belgidan iborat sir
-    # # Yangilangan OTP va vaqtni saqlash
-    # otp_storage[phone_number] = (otp_code, time.time())
-    # secret_token = token_urlsafe()
-    # redis_conn.set(f"{phone_number}:otp_secret", secret_token, ex=expire_in)
-    # return otp_code, otp_secret
