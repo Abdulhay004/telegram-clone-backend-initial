@@ -28,10 +28,10 @@ def send_sms_task(phone_number:str, otp_code:str):
         print(f"Error: {e}")
 
 @shared_task
-def send_email_task(otp_code:str):
+def send_email_task(email:str, otp_code:str):
     message = render_to_string(
         "emails/email_template.html",
-        {"email": "tolibjonovabdulhay200@gmail.com", "message": otp_code}
+        {"email": email, "otp_code": otp_code}
     )
 
     email_message = EmailMessage(
