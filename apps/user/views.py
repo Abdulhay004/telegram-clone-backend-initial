@@ -4,10 +4,11 @@ from django.conf import settings
 from unittest.mock import Mock
 redis_m = Mock()
 
+from share.tasks import send_sms_task, send_email_task
 from share.utils import generate_otp
 from django.utils.translation import gettext_lazy as _
 
-from .serializers import SignUpSerializer, VerifyOTPSerializer
+from .serializers import SignUpSerializer, VerifyOTPSerializer, LoginSerializer
 from .models import User
 from .services import UserService
 
@@ -60,10 +61,22 @@ class VerifyView(generics.GenericAPIView):
 
         user.is_verified = True
         user.save()
-
-        # redis_conn.delete(f"{phone_number}:otp_secret")
-        # redis_conn.delete(f"{phone_number}:otp")
-
         tokens = UserService.create_tokens(user)
 
         return Response(tokens, status=status.HTTP_200_OK)
+
+class LoginView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = LoginSerializer
+    permission_classes = [AllowAny,]
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        phone_number = serializer.validated_data.get('phone_number')
+        user = serializer.save()
+        otp_secret = redis_conn.get(f"{user.phone_number}:otp_secret").decode()
+        data = {
+            "phone_number":phone_number,
+            "otp_secret":otp_secret
+        }
+        return Response(data=data)
