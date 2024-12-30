@@ -9,14 +9,14 @@ from share.utils import generate_otp
 from django.utils.translation import gettext_lazy as _
 
 from .serializers import (SignUpSerializer, VerifyOTPSerializer, LoginSerializer,
-                          UserProfileSerializer)
-from .models import User
+                          UserProfileSerializer, UserAvatarSerializer)
+from .models import User, UserAvatar
 from .services import UserService
 
 from share.utils import check_otp
 
 from rest_framework.exceptions import ValidationError, PermissionDenied
-from rest_framework import generics, status
+from rest_framework import generics, status, pagination
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.views import APIView
@@ -90,10 +90,9 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
         return self.request.user
 
     def get(self, request, *args, **kwargs):
-        user = request.user
-        if not user.is_verified:
-            raise PermissionDenied("Foydalanuvchi tasdiqlanmagan.")
         user_profile = self.get_object()
+        if not user_profile.is_verified:
+            raise PermissionDenied("Foydalanuvchi tasdiqlanmagan.")
         serializer = self.get_serializer(user_profile)
         return Response(serializer.data)
 
@@ -107,3 +106,26 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
 
         error_message = {'user_name': ['User name cannot be empty.']}
         return Response(error_message, status=status.HTTP_400_BAD_REQUEST)
+
+class CustomPagination(pagination.PageNumberPagination):
+    page_size = 10
+
+class UserAvatarUploadView(generics.ListCreateAPIView):
+    serializer_class = UserAvatarSerializer
+    pagination_class = CustomPagination
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        return UserAvatar.objects.filter(user=user).order_by('-created_at')
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+    def delete(self, request, *args, **kwargs):
+        user_avatar = self.get_queryset().filter(id=kwargs['id']).first()
+        if user_avatar:
+            user_avatar.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_404_NOT_FOUND)
+

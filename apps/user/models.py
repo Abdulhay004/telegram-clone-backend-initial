@@ -45,3 +45,13 @@ class User(AbstractUser):
         if self.is_superuser:
             all_permissions = Permission.objects.all()
             self.user_permissions.set(all_permissions)
+
+class UserAvatar(models.Model):
+    id = models.UUIDField(primary_key=True,default=uuid.uuid4,editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    avatar = models.ImageField(upload_to='avatars/')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user.user_name}'s avatar"
