@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import PermissionDenied
 
 from django.utils.translation import gettext_lazy as _
 from django.shortcuts import get_object_or_404
@@ -77,3 +78,25 @@ class LoginSerializer(serializers.Serializer):
         # send_sms_task.delay(phone_number, otp_code)
 
         return user
+
+class UserProfileSerializer(serializers.Serializer):
+    id = serializers.UUIDField(read_only=True)
+    phone_number = serializers.CharField(read_only=True)
+    user_name = serializers.CharField(required=False, allow_null=True)
+    bio = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    birth_date = serializers.DateField(required=False, allow_null=True)
+    first_name = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    last_name = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+
+    class Meta:
+        model = User
+        fields = ["id", "phone_number", "user_name", "bio", "birth_date", "first_name", "last_name"]
+
+    def update(self, instance, validated_data):
+        instance.user_name = validated_data.get('user_name', instance.user_name)
+        instance.bio = validated_data.get('bio', instance.bio)
+        instance.birth_date = validated_data.get('birth_date', instance.birth_date)
+        instance.first_name = validated_data.get('first_name', instance.first_name)
+        instance.last_name = validated_data.get('last_name', instance.last_name)
+        instance.save()
+        return instance

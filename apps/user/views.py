@@ -8,13 +8,14 @@ from share.tasks import send_sms_task, send_email_task
 from share.utils import generate_otp
 from django.utils.translation import gettext_lazy as _
 
-from .serializers import SignUpSerializer, VerifyOTPSerializer, LoginSerializer
+from .serializers import (SignUpSerializer, VerifyOTPSerializer, LoginSerializer,
+                          UserProfileSerializer)
 from .models import User
 from .services import UserService
 
 from share.utils import check_otp
 
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError, PermissionDenied
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -80,3 +81,29 @@ class LoginView(generics.CreateAPIView):
             "otp_secret":otp_secret
         }
         return Response(data=data)
+
+class UserProfileView(generics.RetrieveUpdateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserProfileSerializer
+    permission_classes = [IsAuthenticated]
+    def get_object(self):
+        return self.request.user
+
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        if not user.is_verified:
+            raise PermissionDenied("Foydalanuvchi tasdiqlanmagan.")
+        user_profile = self.get_object()
+        serializer = self.get_serializer(user_profile)
+        return Response(serializer.data)
+
+    def patch(self, request, *args, **kwargs):
+        user_profile = self.get_object()
+        serializer = self.get_serializer(user_profile, data=request.data, partial=True)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        error_message = {'user_name': ['User name cannot be empty.']}
+        return Response(error_message, status=status.HTTP_400_BAD_REQUEST)
