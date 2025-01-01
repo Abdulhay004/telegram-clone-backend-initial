@@ -8,7 +8,7 @@ from share.tasks import send_sms_task, send_email_task
 from share.utils import generate_otp
 from share.utils import check_otp
 import re
-from .models import User, UserAvatar
+from .models import User, UserAvatar, DeviceInfo
 
 class SignUpSerializer(serializers.Serializer):
     phone_number = serializers.CharField(min_length=9,max_length=16,help_text="telefon raqam")
@@ -113,3 +113,7 @@ class UserAvatarSerializer(serializers.Serializer):
        user_avatar = UserAvatar.objects.create(user=user, **validated_data)
        return user_avatar
 
+class DeviceInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DeviceInfo
+        fields = ['device_name', 'ip_address', 'last_login']

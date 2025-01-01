@@ -17,6 +17,7 @@ class User(AbstractUser):
     is_verified = models.BooleanField(default=False)
     is_online = models.BooleanField(default=False)
     last_seen = models.DateTimeField(null=True,blank=True)
+    last_login = models.DateTimeField(null=True,blank=True)
     is_2fa_enabled = models.BooleanField(default=False)
     otp_secret = models.CharField(max_length=200,null=True,blank=True)
     email = models.EmailField(null=True,blank=True)
@@ -55,3 +56,15 @@ class UserAvatar(models.Model):
 
     def __str__(self):
         return f"{self.user.user_name}'s avatar"
+
+
+class DeviceInfo(models.Model):
+    id = models.UUIDField(primary_key=True,default=uuid.uuid4,editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    device_name = models.CharField(max_length=255)
+    ip_address = models.GenericIPAddressField()
+    last_login = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.device_name} - {self.ip_address}"

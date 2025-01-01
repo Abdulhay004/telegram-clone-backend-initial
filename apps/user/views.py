@@ -9,8 +9,8 @@ from share.utils import generate_otp
 from django.utils.translation import gettext_lazy as _
 
 from .serializers import (SignUpSerializer, VerifyOTPSerializer, LoginSerializer,
-                          UserProfileSerializer, UserAvatarSerializer)
-from .models import User, UserAvatar
+                          UserProfileSerializer, UserAvatarSerializer, DeviceInfoSerializer)
+from .models import User, UserAvatar, DeviceInfo
 from .services import UserService
 
 from share.utils import check_otp
@@ -128,4 +128,12 @@ class UserAvatarUploadView(generics.ListCreateAPIView):
             user_avatar.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_404_NOT_FOUND)
+
+class DeviceListView(generics.ListAPIView):
+    serializer_class = DeviceInfoSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = CustomPagination
+
+    def get_queryset(self):
+        return DeviceInfo.objects.filter(user=self.request.user).order_by('-created_at')
 
