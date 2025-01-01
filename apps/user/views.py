@@ -148,14 +148,14 @@ class LogoutView(APIView):
         TokenService.add_token_to_redis(
             user.id,
             "fake_token",
-            "access",
+            TokenType.ACCESS,
             settings.SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"],
-    )
+        )
 
         TokenService.add_token_to_redis(
             user.id,
             "fake_token",
-            "refresh",
+            TokenType.REFRESH,
             settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"],
-    )
+        )
         return Response(data={"detail":"Successfully logged out"})
