@@ -144,7 +144,8 @@ class LogoutView(APIView):
     permission_classes = [IsAuthenticated,]
     def post(self,request,*args,**kwargs):
         user = request.user
-
+        TokenService.delete_tokens(user_id=request.user.id,token_type=TokenType.ACCESS)
+        TokenService.delete_tokens(user_id=request.user.id,token_type=TokenType.REFRESH)
         TokenService.add_token_to_redis(
             user.id,
             "fake_token",
