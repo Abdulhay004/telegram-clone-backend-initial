@@ -2,8 +2,7 @@ from django.shortcuts import render
 import redis
 from django.conf import settings
 from unittest.mock import Mock
-redis_m = Mock()
-
+import uuid
 from share.tasks import send_sms_task, send_email_task
 from share.utils import generate_otp
 from django.utils.translation import gettext_lazy as _
@@ -12,6 +11,10 @@ from .serializers import (SignUpSerializer, VerifyOTPSerializer, LoginSerializer
                           UserProfileSerializer, UserAvatarSerializer, DeviceInfoSerializer)
 from .models import User, UserAvatar, DeviceInfo
 from .services import UserService
+from share.services import TokenService
+from share.enums import TokenType
+
+import datetime
 
 from share.utils import check_otp
 
@@ -137,3 +140,23 @@ class DeviceListView(generics.ListAPIView):
     def get_queryset(self):
         return DeviceInfo.objects.filter(user=self.request.user).order_by('-created_at')
 
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated,]
+    def post(self,request,*args,**kwargs):
+        user = request.user
+        user_id = user.id
+
+        TokenService.add_token_to_redis(
+            uuid.UUID(str(user.id)),
+            "fake_token",
+            "access",
+            settings.SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"],
+    )
+
+        TokenService.add_token_to_redis(
+            uuid.UUID(str(user.id)),
+            "fake_token",
+            "refresh",
+            settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"],
+    )
+        return Response(data={"detail":"Successfully logged out"})
