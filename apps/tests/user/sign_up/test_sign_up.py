@@ -66,7 +66,6 @@ def test_signup(signup_data, api_client, mocker):
     mocker.patch("user.serializers.send_email_task", return_value=None)
 
     resp = client.post("/api/users/register/", data=req_json, format="json")
-    print(req_json)
 
     assert resp.status_code == status_code
 

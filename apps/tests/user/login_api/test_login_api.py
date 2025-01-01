@@ -74,7 +74,6 @@ def test_login(login_data, api_client, mocker):
     )
 
     resp = api_client().post("/api/users/login/", data=req_json)
-    print(resp.data)
 
     assert resp.status_code == status_code
     if status_code == 200:
