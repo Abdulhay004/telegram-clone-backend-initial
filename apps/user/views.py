@@ -146,18 +146,16 @@ class LogoutView(APIView):
         user = request.user
 
         TokenService.add_token_to_redis(
-            uuid.UUID(str(user.id)),
+            user.id,
             "fake_token",
             "access",
             settings.SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"],
     )
 
         TokenService.add_token_to_redis(
-            uuid.UUID(str(user.id)),
+            user.id,
             "fake_token",
             "refresh",
             settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"],
     )
-        TokenService.delete_tokens(user_id=request.user.id,token_type=TokenType.ACCESS)
-        TokenService.delete_tokens(user_id=request.user.id,token_type=TokenType.REFRESH)
         return Response(data={"detail":"Successfully logged out"})
