@@ -144,7 +144,6 @@ class LogoutView(APIView):
     permission_classes = [IsAuthenticated,]
     def post(self,request,*args,**kwargs):
         user = request.user
-        user_id = user.id
 
         TokenService.add_token_to_redis(
             uuid.UUID(str(user.id)),
@@ -159,4 +158,6 @@ class LogoutView(APIView):
             "refresh",
             settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"],
     )
+        TokenService.delete_tokens(user_id=request.user.id,token_type=TokenType.ACCESS)
+        TokenService.delete_tokens(user_id=request.user.id,token_type=TokenType.REFRESH)
         return Response(data={"detail":"Successfully logged out"})
