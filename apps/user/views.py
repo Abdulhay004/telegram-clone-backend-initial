@@ -1,6 +1,7 @@
 from django.shortcuts import render
 import redis
 from django.conf import settings
+from django.db import transaction
 from unittest.mock import Mock
 import uuid
 from share.tasks import send_sms_task, send_email_task
@@ -8,8 +9,9 @@ from share.utils import generate_otp
 from django.utils.translation import gettext_lazy as _
 
 from .serializers import (SignUpSerializer, VerifyOTPSerializer, LoginSerializer,
-                          UserProfileSerializer, UserAvatarSerializer, DeviceInfoSerializer)
-from .models import User, UserAvatar, DeviceInfo
+                          UserProfileSerializer, UserAvatarSerializer, DeviceInfoSerializer,
+                          ContactSerializer)
+from .models import User, UserAvatar, DeviceInfo, Contact
 from .services import UserService
 from share.services import TokenService
 from share.enums import TokenType
@@ -19,7 +21,7 @@ import datetime
 from share.utils import check_otp
 
 from rest_framework.exceptions import ValidationError, PermissionDenied
-from rest_framework import generics, status, pagination
+from rest_framework import generics, status, pagination, viewsets
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.views import APIView
@@ -160,3 +162,46 @@ class LogoutView(APIView):
             settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"],
         )
         return Response(data={"detail":"Successfully logged out"})
+
+class ContactAPIView(generics.ListCreateAPIView, generics.DestroyAPIView):
+    queryset = Contact.objects.all()
+    permission_classes = [IsAuthenticated]
+    serializer_class = ContactSerializer
+    pagination_class = CustomPagination
+
+    def get_queryset(self):
+        user = self.request.user
+        return Contact.objects.filter(user=user).order_by('-created_at')
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+    def perform_destroy(self, instance):
+        if instance.user != self.request.user:
+            raise PermissionError("You do not have permission to delete this contact.")
+        instance.delete()
+
+class ContactSyncView(generics.CreateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = ContactSerializer
+
+    def create(self, request, *args, **kwargs):
+           contacts_data = request.data
+           responses = []
+
+           with transaction.atomic():
+               for contact_data in contacts_data:
+                   phone_number = contact_data.get('phone_number')
+                   first_name = contact_data.get('first_name')
+                   last_name = contact_data.get('last_name')
+                   if Contact.objects.filter(phone_number=phone_number).exists():
+                       responses.append({"status": "already exists", "phone_number": phone_number})
+                   elif phone_number == request.user.username:
+                       responses.append({"status": "self", "phone_number": phone_number})
+                   elif first_name+last_name == 'NotFound':
+                       responses.append({"status": "not found", "phone_number": phone_number})
+                   else:
+                       new_contact = Contact.objects.create(user=request.user, **contact_data)
+                       responses.append({"status": "created", "phone_number": new_contact.phone_number})
+
+           return Response(responses, status=status.HTTP_201_CREATED)

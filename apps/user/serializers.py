@@ -8,7 +8,8 @@ from share.tasks import send_sms_task, send_email_task
 from share.utils import generate_otp
 from share.utils import check_otp
 import re
-from .models import User, UserAvatar, DeviceInfo
+from .models import User, UserAvatar, DeviceInfo, Contact
+
 
 class SignUpSerializer(serializers.Serializer):
     phone_number = serializers.CharField(min_length=9,max_length=16,help_text="telefon raqam")
@@ -117,3 +118,28 @@ class DeviceInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = DeviceInfo
         fields = ['device_name', 'ip_address', 'last_login']
+
+class ContactSerializer(serializers.ModelSerializer):
+    phone_number = serializers.CharField(max_length=20,read_only=True)
+    username = serializers.CharField(read_only=True)
+    phone = serializers.CharField(max_length=30, write_only=True)
+    class Meta:
+        model = Contact
+        fields = ['id', 'username', 'first_name', 'last_name', 'phone_number', 'phone']
+        read_only_fields = ['id', 'username']
+
+    # def validate_friend(self, value):
+    #     if value == self.context['request'].user:
+    #         raise serializers.ValidationError("Siz o'zingizni do'st sifatida qo'sha olmaysiz.")
+    #     return value
+
+    def create(self, validated_data):
+       # user = self.context['request'].user
+       phone_number = validated_data.pop('phone')
+       friend = User.objects.filter(phone_number=phone_number).first()
+       if not friend:
+           raise ValidationError("User Friend Not Found.")
+       # if Contact.objects.filter(phone_number=phone_number, friend=friend).exists():
+       #      raise serializers.ValidationError("Contact already exists.")
+       context = Contact.objects.create(friend=friend, **validated_data)
+       return context
