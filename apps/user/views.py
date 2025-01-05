@@ -253,3 +253,11 @@ class Verify2FAView(generics.GenericAPIView):
         user = serializer.validated_data['user']
         tokens = UserService.create_tokens(user)
         return Response(tokens, status=status.HTTP_200_OK)
+
+class UserPresenceView(APIView):
+    def get(self, request, user_id):
+        try:
+            user = User.objects.filter(id=user_id).first()
+            return Response({'is_online':user.is_online, 'last_seen':user.last_seen}, status=200)
+        except:
+            return Response(status=404)
