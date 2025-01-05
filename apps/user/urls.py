@@ -3,7 +3,7 @@ from .views import (SignUpView, VerifyView, LoginView,
                     UserProfileView, UserAvatarUploadView,
                     DeviceListView, LogoutView, ContactAPIView,
                     ContactSyncView, Enable2FAView, Verify2FAView,
-                    UserPresenceView)
+                    UserPresenceView, NotificationView)
 
 urlpatterns = [
     path('register/', SignUpView.as_view(), name='signup'),
@@ -20,4 +20,5 @@ urlpatterns = [
     path('2fa/', Enable2FAView.as_view(), name='2-FA'),
     path('2fa/verify/', Verify2FAView.as_view(), name='verify-2fa'),
     path('<uuid:user_id>/status/', UserPresenceView.as_view(), name='user-presence'),
+    path('notifications/', NotificationView.as_view(), name='notification-settings'),
 ]

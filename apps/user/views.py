@@ -11,8 +11,8 @@ from django.utils.translation import gettext_lazy as _
 
 from .serializers import (SignUpSerializer, VerifyOTPSerializer, LoginSerializer,
                           UserProfileSerializer, UserAvatarSerializer, DeviceInfoSerializer,
-                          ContactSerializer, TwoFactorAuthSerializer)
-from .models import User, UserAvatar, DeviceInfo, Contact
+                          ContactSerializer, TwoFactorAuthSerializer, NotificationSerializer)
+from .models import User, UserAvatar, DeviceInfo, Contact, NotificationPreference
 from .services import UserService
 from share.services import TokenService
 from share.enums import TokenType
@@ -261,3 +261,21 @@ class UserPresenceView(APIView):
             return Response({'is_online':user.is_online, 'last_seen':user.last_seen}, status=200)
         except:
             return Response(status=404)
+
+class NotificationView(APIView):
+    def get(self, request):
+        notification = NotificationPreference.objects.first()
+        if notification:
+            serializer = NotificationSerializer(notification)
+            return Response(serializer.data)
+        return Response({"detail": "Notification settings not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    def patch(self, request):
+        notification = NotificationPreference.objects.first()
+        if notification:
+            serializer = NotificationSerializer(notification, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"detail": "Notification settings not found."}, status=status.HTTP_404_NOT_FOUND)

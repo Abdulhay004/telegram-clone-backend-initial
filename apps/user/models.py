@@ -87,3 +87,9 @@ class Contact(models.Model):
         verbose_name = 'Contact'
         verbose_name_plural = 'Contacts'
         ordering = ['-created_at']
+
+class NotificationPreference(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    notifications_enabled = models.BooleanField(default=False)
+    device_token = models.CharField(max_length=255, null=True, blank=True)
+

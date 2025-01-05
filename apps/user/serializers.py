@@ -8,7 +8,7 @@ from share.tasks import send_sms_task, send_email_task
 from share.utils import generate_otp
 from share.utils import check_otp
 import re
-from .models import User, UserAvatar, DeviceInfo, Contact
+from .models import User, UserAvatar, DeviceInfo, Contact, NotificationPreference
 
 
 class SignUpSerializer(serializers.Serializer):
@@ -158,3 +158,8 @@ class TwoFactorAuthSerializer(serializers.Serializer):
 
         attrs['user'] = user
         return attrs
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NotificationPreference
+        fields = ['id', 'notifications_enabled', 'device_token']
