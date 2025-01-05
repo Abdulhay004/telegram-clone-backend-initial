@@ -2,7 +2,7 @@ from django.urls import path
 from .views import (SignUpView, VerifyView, LoginView,
                     UserProfileView, UserAvatarUploadView,
                     DeviceListView, LogoutView, ContactAPIView,
-                    ContactSyncView)
+                    ContactSyncView, Enable2FAView, Verify2FAView)
 
 urlpatterns = [
     path('register/', SignUpView.as_view(), name='signup'),
@@ -16,4 +16,6 @@ urlpatterns = [
     path('contacts/', ContactAPIView.as_view(), name='contact-list-create'),
     path('contacts/<uuid:pk>/', ContactAPIView.as_view(), name='contact-delete'),
     path('contacts/sync/', ContactSyncView.as_view(), name='contact-sync'),
+    path('2fa/', Enable2FAView.as_view(), name='2-FA'),
+    path('2fa/verify/', Verify2FAView.as_view(), name='verify-2fa'),
 ]

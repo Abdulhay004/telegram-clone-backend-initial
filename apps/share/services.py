@@ -28,10 +28,6 @@ class TokenService:
         redis_client = cls.get_redis_client()
 
         token_key = f"user:{user_id}:{token_type}"
-
-        # valid_tokens = cls.get_valid_tokens(user_id, token_type)
-        # if valid_tokens:
-        #     cls.delete_tokens(user_id, token_type)
         redis_client.sadd(token_key, token)
         redis_client.expire(token_key, expire_time)
 

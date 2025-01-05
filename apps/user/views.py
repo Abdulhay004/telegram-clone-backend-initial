@@ -1,16 +1,17 @@
-from django.shortcuts import render
 import redis
 from django.conf import settings
 from django.db import transaction
 from unittest.mock import Mock
 import uuid
+
+from django.utils.text import phone2numeric
 from share.tasks import send_sms_task, send_email_task
 from share.utils import generate_otp
 from django.utils.translation import gettext_lazy as _
 
 from .serializers import (SignUpSerializer, VerifyOTPSerializer, LoginSerializer,
                           UserProfileSerializer, UserAvatarSerializer, DeviceInfoSerializer,
-                          ContactSerializer)
+                          ContactSerializer, TwoFactorAuthSerializer)
 from .models import User, UserAvatar, DeviceInfo, Contact
 from .services import UserService
 from share.services import TokenService
@@ -49,6 +50,14 @@ class VerifyView(generics.GenericAPIView):
     serializer_class = VerifyOTPSerializer
     permission_classes = [AllowAny,]
     def patch(self, request, otp_secret):
+        phone_number = request.data.get('phone_number')
+        user = User.objects.filter(phone_number=phone_number, is_2fa_enabled=True).first()
+
+        if user:
+            return Response({
+                "detail": "2FA enabled, please verify your password",
+                "user_id": user.id
+            }, status=status.HTTP_200_OK)
         data = {'otp_code':request.data.get('otp_code'),
                 'phone_number':request.data.get('phone_number'),
                 'otp_secret':otp_secret}
@@ -57,7 +66,6 @@ class VerifyView(generics.GenericAPIView):
 
         phone_number = serializer.validated_data['phone_number']
         otp_code = serializer.validated_data['otp_code']
-
         try:
             user = User.objects.filter(phone_number=phone_number).first()
         except Exception as e:
@@ -205,3 +213,43 @@ class ContactSyncView(generics.CreateAPIView):
                        responses.append({"status": "created", "phone_number": new_contact.phone_number})
 
            return Response(responses, status=status.HTTP_201_CREATED)
+
+class Enable2FAView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        type_value = request.data.get('type')
+        otp_secret = request.data.get('otp_secret')
+
+        if type_value is None:
+            return Response({"detail": "Type must be specified."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if type_value == True:
+            # 2FA yoqish
+            if otp_secret and len(otp_secret) >= 8:
+                user.otp_secret = otp_secret
+                user.is_2fa_enabled = True
+                user.save()
+                return Response({"detail": "2FA enabled."}, status=status.HTTP_200_OK)
+            else:
+                return Response(["OTP secret must be at least 8 characters long."], status=status.HTTP_400_BAD_REQUEST)
+
+        elif type_value == False:
+            # 2FA o'chirish
+            user.is_2fa_enabled = False
+            user.otp_secret = None
+            user.save()
+            return Response({"detail": "2FA disabled."}, status=status.HTTP_200_OK)
+
+        return Response({"detail": "Invalid type value."}, status=status.HTTP_400_BAD_REQUEST)
+
+class Verify2FAView(generics.GenericAPIView):
+    serializer_class = TwoFactorAuthSerializer
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        tokens = UserService.create_tokens(user)
+        return Response(tokens, status=status.HTTP_200_OK)

@@ -59,29 +59,3 @@ class UserService:
             "access": access,
             "refresh": refresh
         }
-    #
-    # @classmethod
-    # def get_user_by_email_or_phone(cls, email_or_phone_number: str) -> User:
-    #     if User.objects.filter(phone_number=email_or_phone_number).exists():
-    #         return User.objects.filter(phone_number=email_or_phone_number).first()
-    #     if User.objects.filter(email=email_or_phone_number).exists():
-    #         return User.objects.filter(email=email_or_phone_number).first()
-    #
-    #
-    # @classmethod
-    # def generate_access_token(cls, user: User) -> str:
-    #     payload = {
-    #         "sub": str(user.id),
-    #         "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)
-    #     }
-    #     token = jwt.encode(payload, settings.SECRET_KEY, algorithm=ALGORITHM)
-    #     return token
-    #
-    # @classmethod
-    # def generate_refresh_token(cls, user: User) -> str:
-    #     payload = {
-    #         "sub": str(user.id),
-    #         "exp": datetime.datetime.utcnow() + datetime.timedelta(days=30)
-    #     }
-    #     token = jwt.encode(payload, settings.SECRET_KEY, algorithm=ALGORITHM)
-    #     return token

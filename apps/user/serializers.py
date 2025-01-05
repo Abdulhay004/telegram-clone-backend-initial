@@ -128,18 +128,33 @@ class ContactSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'first_name', 'last_name', 'phone_number', 'phone']
         read_only_fields = ['id', 'username']
 
-    # def validate_friend(self, value):
-    #     if value == self.context['request'].user:
-    #         raise serializers.ValidationError("Siz o'zingizni do'st sifatida qo'sha olmaysiz.")
-    #     return value
-
     def create(self, validated_data):
-       # user = self.context['request'].user
        phone_number = validated_data.pop('phone')
        friend = User.objects.filter(phone_number=phone_number).first()
        if not friend:
            raise ValidationError("User Friend Not Found.")
-       # if Contact.objects.filter(phone_number=phone_number, friend=friend).exists():
-       #      raise serializers.ValidationError("Contact already exists.")
        context = Contact.objects.create(friend=friend, **validated_data)
        return context
+
+class TwoFactorAuthSerializer(serializers.Serializer):
+    user_id = serializers.UUIDField()
+    password = serializers.CharField(write_only=True)
+    otp_code = serializers.CharField(write_only=True)
+
+    def validate(self, attrs):
+        user = User.objects.filter(id=attrs['user_id']).first()
+        if not user:
+            raise serializers.ValidationError("User not found.")
+
+        if not user.check_password(attrs['password']):
+            raise serializers.ValidationError("Invalid password.")
+
+        if user.is_2fa_enabled and user.otp_secret:
+            totp = pyotp.TOTP(user.otp_secret)
+            if not totp.verify(attrs['otp_code']):
+                raise serializers.ValidationError("Invalid OTP code.")
+        else:
+            raise serializers.ValidationError("2FA is not enabled for this user.")
+
+        attrs['user'] = user
+        return attrs

@@ -77,6 +77,7 @@ pyasn1==0.6.1
 pyasn1_modules==0.4.1
 pycparser==2.22
 PyJWT==2.9.0
+pyotp==2.9.0
 pyparsing==3.2.0
 pytest==8.3.3
 pytest-asyncio==0.24.0
