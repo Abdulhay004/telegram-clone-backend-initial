@@ -8,6 +8,8 @@ from share.tasks import send_sms_task, send_email_task
 from share.utils import generate_otp
 from share.utils import check_otp
 import re
+import uuid
+
 from .models import User, UserAvatar, DeviceInfo, Contact, NotificationPreference
 
 
@@ -159,7 +161,15 @@ class TwoFactorAuthSerializer(serializers.Serializer):
         attrs['user'] = user
         return attrs
 
-class NotificationSerializer(serializers.ModelSerializer):
+class NotificationGetSerializer(serializers.ModelSerializer):
+    id = serializers.UUIDField(default=uuid.uuid4)
+    notifications_enabled = serializers.BooleanField(default=False)
+    device_token = serializers.BooleanField(allow_null=True)
+    class Meta:
+        model = NotificationPreference
+        fields = ['id', 'notifications_enabled', 'device_token']
+
+class NotificationPatchSerializer(serializers.ModelSerializer):
     class Meta:
         model = NotificationPreference
         fields = ['id', 'notifications_enabled', 'device_token']

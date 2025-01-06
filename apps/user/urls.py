@@ -20,5 +20,5 @@ urlpatterns = [
     path('2fa/', Enable2FAView.as_view(), name='2-FA'),
     path('2fa/verify/', Verify2FAView.as_view(), name='verify-2fa'),
     path('<uuid:user_id>/status/', UserPresenceView.as_view(), name='user-presence'),
-    path('notifications/', NotificationView.as_view(), name='notification-settings'),
+    path('notifications/', NotificationView.as_view(), name='notifications-settings'),
 ]

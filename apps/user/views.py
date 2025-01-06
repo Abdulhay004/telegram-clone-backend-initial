@@ -1,5 +1,6 @@
 import redis
 from django.conf import settings
+from django.core.serializers import serialize
 from django.db import transaction
 from unittest.mock import Mock
 import uuid
@@ -11,7 +12,8 @@ from django.utils.translation import gettext_lazy as _
 
 from .serializers import (SignUpSerializer, VerifyOTPSerializer, LoginSerializer,
                           UserProfileSerializer, UserAvatarSerializer, DeviceInfoSerializer,
-                          ContactSerializer, TwoFactorAuthSerializer, NotificationSerializer)
+                          ContactSerializer, TwoFactorAuthSerializer, NotificationGetSerializer,
+                          NotificationPatchSerializer)
 from .models import User, UserAvatar, DeviceInfo, Contact, NotificationPreference
 from .services import UserService
 from share.services import TokenService
@@ -262,18 +264,28 @@ class UserPresenceView(APIView):
         except:
             return Response(status=404)
 
-class NotificationView(APIView):
-    def get(self, request):
-        notification = NotificationPreference.objects.first()
+class NotificationView(generics.ListCreateAPIView):
+    queryset = NotificationPreference.objects.all()
+    serializer_class = NotificationGetSerializer
+
+    def get(self, request, *args, **kwargs):
+        notification = NotificationPreference.objects.filter(user=request.user).first()
         if notification:
-            serializer = NotificationSerializer(notification)
+            serializer = NotificationGetSerializer(notification, many=True)
             return Response(serializer.data)
-        return Response({"detail": "Notification settings not found."}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            NotificationPreference.objects.create(
+                user=request.user,
+                notifications_enabled=True,
+                device_token=None
+            )
+            serializer = NotificationGetSerializer()
+            return Response(serializer.data)
 
     def patch(self, request):
         notification = NotificationPreference.objects.first()
         if notification:
-            serializer = NotificationSerializer(notification, data=request.data, partial=True)
+            serializer = NotificationPatchSerializer(notification, data=request.data, partial=True)
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data)
