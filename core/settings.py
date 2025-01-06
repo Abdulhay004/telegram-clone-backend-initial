@@ -1,6 +1,8 @@
 import os
 import sys
 from datetime import timedelta, datetime
+
+import rest_framework.throttling
 import sentry_sdk
 import logging
 from sentry_sdk.integrations.django import DjangoIntegration
@@ -51,6 +53,7 @@ EXTERNAL_APPS = [
 
 LOCAL_APPS = [
     'user',
+    'chat',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + EXTERNAL_APPS + LOCAL_APPS
@@ -193,6 +196,14 @@ REST_FRAMEWORK = {
         'user.authentications.CustomJWTAuthentication',
         'user.authentications.CustomBasicAuthentication',
     ],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/day', # anonim user uchun kuniga 100 ta sms ga ruhsat
+        'user': '1000/day', # user uchun kuniga 1000 ta sms ga ruhsat
+    }
 }
 
 # JWT
