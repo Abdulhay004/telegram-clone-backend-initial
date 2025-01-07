@@ -272,7 +272,7 @@ class NotificationView(generics.ListCreateAPIView):
     def get(self, request, *args, **kwargs):
         notification = NotificationPreference.objects.filter(user=request.user).first()
         if notification:
-            serializer = NotificationGetSerializer(notification, many=True)
+            serializer = NotificationGetSerializer(notification)
             return Response(serializer.data)
         else:
             NotificationPreference.objects.create(

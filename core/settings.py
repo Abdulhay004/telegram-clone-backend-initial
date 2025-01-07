@@ -48,6 +48,7 @@ EXTERNAL_APPS = [
     # 'drf_yasg',
     'django_celery_beat',
     'debug_toolbar',
+    'channels',
 ]
 
 LOCAL_APPS = [
@@ -100,7 +101,8 @@ TEMPLATES = [
 # APPLICATIONS
 # -----------------------------------------------------------------------------------------
 
-WSGI_APPLICATION = "core.wsgi.application"
+# WSGI_APPLICATION = "core.wsgi.application"
+ASGI_APPLICATION = "core.asgi.application"
 
 # DATABASES
 # -----------------------------------------------------------------------------------------
@@ -277,7 +279,14 @@ CACHES = {
 
 # CHANNELS
 # -----------------------------------------------------------------------------------------
-
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [REDIS_URL],
+        }
+    }
+}
 
 # CELERY
 # -----------------------------------------------------------------------------------------
