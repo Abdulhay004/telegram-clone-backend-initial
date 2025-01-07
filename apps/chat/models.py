@@ -11,6 +11,7 @@ class Chat(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        app_label = 'chat'
         db_table = "chat"
         verbose_name = "Chat"
         verbose_name_plural = "Chats"

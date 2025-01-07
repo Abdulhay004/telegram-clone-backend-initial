@@ -2,7 +2,6 @@ import os
 import sys
 from datetime import timedelta, datetime
 
-import rest_framework.throttling
 import sentry_sdk
 import logging
 from sentry_sdk.integrations.django import DjangoIntegration
@@ -242,8 +241,8 @@ SIMPLE_JWT = {
 # DRF_SPECTACULAR
 # -----------------------------------------------------------------------------------------
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'Medium',
-    'DESCRIPTION': 'Medium Clone project',
+    'TITLE': 'Telegram',
+    'DESCRIPTION': 'Telegram Clone project',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
     'SECURITY_DEFINITIONS': {

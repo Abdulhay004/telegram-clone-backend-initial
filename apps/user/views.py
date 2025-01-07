@@ -267,6 +267,7 @@ class UserPresenceView(APIView):
 class NotificationView(generics.ListCreateAPIView):
     queryset = NotificationPreference.objects.all()
     serializer_class = NotificationGetSerializer
+    permission_classes = [IsAuthenticated,]
 
     def get(self, request, *args, **kwargs):
         notification = NotificationPreference.objects.filter(user=request.user).first()
@@ -277,7 +278,7 @@ class NotificationView(generics.ListCreateAPIView):
             NotificationPreference.objects.create(
                 user=request.user,
                 notifications_enabled=True,
-                device_token=None
+                device_token='le'
             )
             serializer = NotificationGetSerializer()
             return Response(serializer.data)

@@ -16,10 +16,11 @@ urlpatterns = [
     path('api/', include(
         [   # local apps
             path('users/', include('user.urls')),
+            path('chats/', include('chat.urls')),
             # another apps
-            path('schema/', user_passes_test(is_superuser)(SpectacularAPIView.as_view()), name='schema'),
-            path('swagger/', user_passes_test(is_superuser)(SpectacularSwaggerView.as_view()), name='swagger-ui'),
-            path('redoc/', user_passes_test(is_superuser)(SpectacularRedocView.as_view()), name='redoc'),
+            path('schema/', SpectacularAPIView.as_view(), name='schema'),
+            path('swagger/', SpectacularSwaggerView.as_view(), name='swagger-ui'),
+            path('redoc/', SpectacularRedocView.as_view(), name='redoc'),
             ]))
 
 ]

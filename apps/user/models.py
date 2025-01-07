@@ -6,14 +6,14 @@ from django.contrib.auth.models import AbstractUser, Permission
 
 import uuid
 
-from .managers import UserManager
+# from .managers import UserManager
 
 class User(AbstractUser):
     id = models.UUIDField(primary_key=True,default=uuid.uuid4,editable=False)
-    phone_number = models.CharField(max_length=18,unique=True)
+    phone_number = models.CharField(max_length=18)
     bio = models.CharField(max_length=200,null=True,blank=True)
     user_name =  models.CharField(max_length=200, blank=True, null=True)
-    username =  models.CharField(max_length=200, blank=True, null=True)
+    username =  models.CharField(max_length=200, unique=True, blank=True, null=True)
     birth_date = models.DateField(null=True,blank=True)
     is_verified = models.BooleanField(default=False)
     is_online = models.BooleanField(default=False)
@@ -22,9 +22,9 @@ class User(AbstractUser):
     is_2fa_enabled = models.BooleanField(default=False)
     otp_secret = models.CharField(max_length=200,null=True,blank=True)
     email = models.EmailField(null=True,blank=True)
-    USERNAME_FIELD = "phone_number"
-    REQUIRED_FIELDS = []
-    objects = UserManager()
+    # USERNAME_FIELD = "phone_number"
+    # REQUIRED_FIELDS = []
+    # objects = UserManager()
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
