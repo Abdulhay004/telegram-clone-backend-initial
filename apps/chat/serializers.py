@@ -1,6 +1,6 @@
 from rest_framework import serializers, exceptions, status
 from rest_framework.exceptions import ValidationError
-from .models import Chat, User
+from .models import Chat, User, Message
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -31,3 +31,11 @@ class ChatSerializer(serializers.ModelSerializer):
 
         chat = Chat.objects.create(owner=owner, user=user, **validated_data)
         return chat
+
+class MessageSerializer(serializers.ModelSerializer):
+    sender = serializers.StringRelatedField()  # Yoki boshqa kerakli serializatsiya
+    liked_by = serializers.StringRelatedField(many=True)  # Liked users
+
+    class Meta:
+        model = Message
+        fields = ['id', 'chat', 'sender', 'text', 'image', 'file', 'sent_at', 'is_read', 'liked_by']

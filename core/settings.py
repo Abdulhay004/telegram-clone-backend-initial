@@ -49,6 +49,7 @@ EXTERNAL_APPS = [
     'django_celery_beat',
     'debug_toolbar',
     'channels',
+    'djangochannelsrestframework',
 ]
 
 LOCAL_APPS = [

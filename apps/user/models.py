@@ -5,6 +5,7 @@ from django.db.models import Q
 from django.contrib.auth.models import AbstractUser, Permission
 
 import uuid
+from django.utils import timezone
 
 # from .managers import UserManager
 
@@ -28,6 +29,10 @@ class User(AbstractUser):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def update_last_seen(self):
+        self.last_seen = timezone.now()
+        self.save()
 
     def __str__(self):
         return self.user_name or self.phone_number
