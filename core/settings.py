@@ -55,6 +55,7 @@ EXTERNAL_APPS = [
 LOCAL_APPS = [
     'user',
     'chat',
+    'group',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + EXTERNAL_APPS + LOCAL_APPS
