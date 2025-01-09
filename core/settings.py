@@ -304,6 +304,12 @@ CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_WORKER_SEND_TASK_EVENTS = True
 
+CELERY_BEAT_SCHEDULE = {
+    "send-scheduled-message": {
+        "task": "chat.tasks.send_scheduled_message",
+        "schedule": 10.0,
+    },
+}
 
 # SENTRY SDK
 # -----------------------------------------------------------------------------------------

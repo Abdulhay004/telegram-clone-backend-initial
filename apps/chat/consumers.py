@@ -182,3 +182,22 @@ class ChatConsumer(ObserverModelInstanceMixin, GenericAsyncAPIConsumer, AsyncJso
             return chat.owner
         return None
 
+    @action()
+    async def schedule_message(self, pk, data, **kwargs):
+        chat = await self.get_chat(pk)
+        if not chat:
+            return
+        user = self.scope["user"]
+        scheduled_time = data.get("scheduled_time")
+        if scheduled_time:
+            await self.save_scheduled_message(chat, user, data)
+
+
+    @database_sync_to_async
+    def save_message(self, chat: Chat, user: User, data: dict):
+        valid_keys = {"text", "image", "file"}
+        message_data = {key: data.get(key) for key in valid_keys if data.get(key)}
+        message = Message.objects.create(chat=chat, sender=user, **message_data)
+        return message
+
+
