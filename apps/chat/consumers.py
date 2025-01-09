@@ -200,4 +200,55 @@ class ChatConsumer(ObserverModelInstanceMixin, GenericAsyncAPIConsumer, AsyncJso
         message = Message.objects.create(chat=chat, sender=user, **message_data)
         return message
 
+    async def message_liked(self, event):
+        await self.send_json({"action": "message_liked", "data": event["message"]})
 
+    async def message_unliked(self, event):
+        await self.send_json({"action": "message_unliked", "data": event["message"]})
+
+    @action()
+    async def like_message(self, message_id, **kwargs):
+        user = self.scope["user"]
+        message = await self.get_message(message_id)
+        if message:
+            await self.add_like(message, user)
+            serialized_message = await self.serialize_message(message)
+            await self.channel_layer.group_send(
+                f"chat__{message.chat.id}",
+                {"type": "message_liked", "message": serialized_message},
+            )
+        else:
+            # Xato holatni qayta ishlash
+            await self.send_json({"action": "error", "message": "Message not found."})
+
+    @action()
+    async def unlike_message(self, message_id, **kwargs):
+        user = self.scope["user"]
+        message = await self.get_message(message_id)
+        if message:
+            await self.remove_like(message, user)
+            serialized_message = await self.serialize_message(message)
+            await self.channel_layer.group_send(
+                f"chat__{message.chat.id}",
+                {"type": "message_unliked", "message": serialized_message},
+            )
+        else:
+            # Xato holatni qayta ishlash
+            await self.send_json({"action": "error", "message": "Message not found."})
+
+    @database_sync_to_async
+    def add_like(self, message, user):
+        message.liked_by.add(user)
+        message.save()
+
+    @database_sync_to_async
+    def remove_like(self, message, user):
+        message.liked_by.remove(user)
+        message.save()
+
+    @database_sync_to_async
+    def get_message(self, message_id):
+         try:
+             return Message.objects.get(id=message_id)
+         except Message.DoesNotExist:
+             return None
