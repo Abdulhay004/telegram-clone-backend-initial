@@ -45,13 +45,15 @@ class ChatDetailAPIView(generics.ListAPIView, generics.DestroyAPIView):
 
 class MessageListCreateView(generics.ListCreateAPIView):
     serializer_class = MessageSerializer
+    pagination_class = CustomPagination
+    permission_classes = [IsAuthenticated,]
 
     def get_queryset(self):
-        chat_id = self.kwargs['chat_id']
-        return Message.objects.filter(chat_id=chat_id)
+        chat_id = self.kwargs['id']
+        return Message.objects.filter(chat_id=chat_id).order_by('-sent_at')
 
     def perform_create(self, serializer):
-        chat_id = self.kwargs['chat_id']
+        chat_id = self.kwargs['id']
         message = serializer.save(sender=self.request.user, chat_id=chat_id)
 
         if message.file or message.image:

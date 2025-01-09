@@ -35,7 +35,7 @@ class ChatSerializer(serializers.ModelSerializer):
 class MessageSerializer(serializers.ModelSerializer):
     sender = serializers.StringRelatedField()  # Yoki boshqa kerakli serializatsiya
     liked_by = serializers.StringRelatedField(many=True)  # Liked users
-    chat = ChatSerializer()
+    chat = ChatSerializer(required=False)
 
     class Meta:
         model = Message
@@ -47,5 +47,12 @@ class MessageSerializer(serializers.ModelSerializer):
         return representation
 
     def create(self, validated_data):
+        liked_by_data = validated_data.pop('liked_by', None)
+
         message = Message.objects.create(**validated_data)
+
+        if liked_by_data:
+            for user in liked_by_data:
+                message.liked_by.add(user)
+
         return message
