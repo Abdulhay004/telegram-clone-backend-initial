@@ -45,3 +45,7 @@ class MessageSerializer(serializers.ModelSerializer):
         representation = super().to_representation(instance)
         representation['id'] = str(representation['id'])
         return representation
+
+    def create(self, validated_data):
+        message = Message.objects.create(**validated_data)
+        return message

@@ -3,9 +3,12 @@ from rest_framework import generics, pagination, viewsets, status
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError, NotFound
 from rest_framework.permissions import IsAuthenticated
-from .models import Chat
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+
+from .models import Chat, Message
 from .paginations import CustomPagination
-from .serializers import ChatSerializer
+from .serializers import ChatSerializer, MessageSerializer
 
 class ChatAPIView(generics.ListCreateAPIView):
     queryset = Chat.objects.all()
@@ -39,3 +42,32 @@ class ChatDetailAPIView(generics.ListAPIView, generics.DestroyAPIView):
             raise NotFound("Chat not found.")
         else:
             instance.delete()
+
+class MessageListCreateView(generics.ListCreateAPIView):
+    serializer_class = MessageSerializer
+
+    def get_queryset(self):
+        chat_id = self.kwargs['chat_id']
+        return Message.objects.filter(chat_id=chat_id)
+
+    def perform_create(self, serializer):
+        chat_id = self.kwargs['chat_id']
+        message = serializer.save(sender=self.request.user, chat_id=chat_id)
+
+        if message.file or message.image:
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f"chat_{message.chat.id}",
+                {
+                    "type": "chat_message",
+                    "message_id": str(message.id),
+                    "sender": {
+                        "id": str(message.sender.id),
+                        "user_name": str(message.sender.username),
+                    },
+                    "text": message.text,
+                    "image": message.image.url if message.image.url else None,
+                    "file": message.file if message.file else None,
+                    "sent_at": message.sent_at.isoformat(),
+                },
+            )
