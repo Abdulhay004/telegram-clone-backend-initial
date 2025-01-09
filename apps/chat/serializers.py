@@ -35,7 +35,13 @@ class ChatSerializer(serializers.ModelSerializer):
 class MessageSerializer(serializers.ModelSerializer):
     sender = serializers.StringRelatedField()  # Yoki boshqa kerakli serializatsiya
     liked_by = serializers.StringRelatedField(many=True)  # Liked users
+    chat = ChatSerializer()
 
     class Meta:
         model = Message
         fields = ['id', 'chat', 'sender', 'text', 'image', 'file', 'sent_at', 'is_read', 'liked_by']
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['id'] = str(representation['id'])
+        return representation
