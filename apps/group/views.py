@@ -1,13 +1,15 @@
-from rest_framework import generics, permissions
+from rest_framework import generics,status
 from rest_framework.exceptions import PermissionDenied, NotAuthenticated
+from rest_framework.response import Response
 from .models import Group, GroupPermission
 from .serializers import GroupSerializer
 from .paginations import CustomPagination
+from .permissions import IsOwnerOrReadOnly, IsAuthenticated
 
 class GroupListCreateView(generics.ListCreateAPIView):
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
     pagination_class = CustomPagination
 
     def get_queryset(self):
@@ -20,10 +22,14 @@ class GroupListCreateView(generics.ListCreateAPIView):
 class GroupDetailView(generics.RetrieveDestroyAPIView):
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+    lookup_field = 'pk'
 
     def get_queryset(self):
-        return self.queryset.filter(owner=self.request.user)
+        queryset = self.queryset.filter(owner=self.request.user)
+        if not queryset.exists() and not self.request.method == 'GET':
+            raise PermissionDenied('You do not have permission to access this group.')
+        return queryset
 
     def perform_destroy(self, instance):
         if instance.owner != self.request.user:

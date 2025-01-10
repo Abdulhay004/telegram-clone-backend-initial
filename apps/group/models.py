@@ -58,8 +58,8 @@ class GroupScheduledMessage(models.Model):
 class GroupPermission(models.Model):
     id = models.AutoField(primary_key=True)
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
-    can_send_messages = models.BooleanField(default=True)
-    can_send_media = models.BooleanField(default=True)
+    can_send_messages = models.BooleanField(default=False)
+    can_send_media = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
