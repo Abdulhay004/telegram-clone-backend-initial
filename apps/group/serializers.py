@@ -13,8 +13,16 @@ class GroupSerializer(serializers.ModelSerializer):
         model = Group
         fields = ['id', 'name', 'owner', 'members', 'is_private', 'created_at', 'updated_at']
 
+class GroupPermissionsSerializer(serializers.Serializer):
+    can_send_messages = serializers.BooleanField(required=True)
+    can_send_media = serializers.BooleanField(required=True)
 
-class GroupPermissionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = GroupPermission
-        fields = ['__all__']
+    def validate_can_send_messages(self, value):
+        if not isinstance(value, bool):
+            raise serializers.ValidationError("Value must be a boolean.")
+        return value
+
+    def validate_can_send_media(self, value):
+        if not isinstance(value, bool):
+            raise serializers.ValidationError("Value must be a boolean.")
+        return value
