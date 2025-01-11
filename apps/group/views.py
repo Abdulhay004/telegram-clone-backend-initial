@@ -1,8 +1,11 @@
 from rest_framework import generics,status
 from rest_framework.exceptions import PermissionDenied, NotAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from .models import Group, GroupPermission
-from .serializers import GroupSerializer, GroupPermissionsSerializer
+from .serializers import (
+    GroupSerializer, GroupPermissionsSerializer,
+    GroupMembersSerializer)
 from .paginations import CustomPagination
 from .permissions import IsOwnerOrReadOnly, IsAuthenticated
 
@@ -92,3 +95,22 @@ class GroupMembershipsView(generics.GenericAPIView):
             return Response({"detail": "You have successfully left the group."}, status=status.HTTP_200_OK)
 
         return Response({"detail": "You are not a member of this group."}, status=status.HTTP_400_BAD_REQUEST)
+
+class GroupMembersView(APIView):
+    def patch(self, request, id, *args, **kwargs):
+        try:
+            group = Group.objects.get(id=id)
+        except Group.DoesNotExist:
+            return Response({"detail": "Group not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        if not group.is_private:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        if group.is_private and not (request.user == group.owner or request.user in group.members.all()):
+            return Response({"detail": "You do not have permission to add members to this group."}, status=status.HTTP_403_FORBIDDEN)
+
+        serializer = GroupMembersSerializer(group, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -26,3 +26,10 @@ class GroupPermissionsSerializer(serializers.Serializer):
         if not isinstance(value, bool):
             raise serializers.ValidationError("Value must be a boolean.")
         return value
+
+class GroupMembersSerializer(serializers.ModelSerializer):
+    members = serializers.PrimaryKeyRelatedField(many=True, queryset=User.objects.all())
+
+    class Meta:
+        model = Group
+        fields = ['members']
