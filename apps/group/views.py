@@ -58,3 +58,37 @@ class GroupPermissionsUpdateView(generics.UpdateAPIView):
         group_permission.save()
 
         return Response({"message": "Permissions updated successfully."})
+
+class GroupMembershipsView(generics.GenericAPIView):
+    serializer_class = GroupSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_url_kwarg = 'group_id'
+
+    def get_object(self):
+        group_id = self.kwargs[self.lookup_url_kwarg]
+        return Group.objects.get(id=group_id)
+
+    def get(self, request, *args, **kwargs):
+        group = self.get_object()
+        serializer = self.get_serializer(group)
+        return Response(serializer.data)
+
+    def post(self, request, *args, **kwargs):
+        group = self.get_object()
+
+        if group.is_private:
+            return Response({"detail": "This group is private."}, status=status.HTTP_403_FORBIDDEN)
+        if request.user in group.members.all():
+            return Response({"detail": "You are already a member of this group."}, status=status.HTTP_400_BAD_REQUEST)
+
+        group.members.add(request.user)
+        return Response({"detail": "You have successfully joined the group."}, status=status.HTTP_200_OK)
+
+    def delete(self, request, *args, **kwargs):
+        group = self.get_object()
+
+        if request.user in group.members.all():
+            group.members.remove(request.user)
+            return Response({"detail": "You have successfully left the group."}, status=status.HTTP_200_OK)
+
+        return Response({"detail": "You are not a member of this group."}, status=status.HTTP_400_BAD_REQUEST)
