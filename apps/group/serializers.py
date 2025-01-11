@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Group, GroupPermission, User
+from .models import Group, GroupPermission, User, GroupMessage
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -33,3 +33,8 @@ class GroupMembersSerializer(serializers.ModelSerializer):
     class Meta:
         model = Group
         fields = ['members']
+
+class GroupMessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GroupMessage
+        firlds = '__all__'
