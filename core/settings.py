@@ -45,7 +45,6 @@ EXTERNAL_APPS = [
     'rest_framework_simplejwt',
     'drf_spectacular',
     'django_redis',
-    # 'drf_yasg',
     'django_celery_beat',
     'debug_toolbar',
     'channels',

@@ -35,6 +35,13 @@ class GroupMembersSerializer(serializers.ModelSerializer):
         fields = ['members']
 
 class GroupMessageSerializer(serializers.ModelSerializer):
+    group = GroupSerializer(read_only=True)
+    sender = UserSerializer(read_only=True)
+    like_count = serializers.SerializerMethodField()
     class Meta:
         model = GroupMessage
-        firlds = '__all__'
+        fields = '__all__'
+        read_only_fields = ['liked_by']
+
+    def get_like_count(self, obj):
+        return obj.liked_by.count()

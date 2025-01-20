@@ -34,7 +34,7 @@ class ChatSerializer(serializers.ModelSerializer):
 
 class MessageSerializer(serializers.ModelSerializer):
     sender = serializers.StringRelatedField()  # Yoki boshqa kerakli serializatsiya
-    liked_by = UserSerializer(many=True)  # Liked users
+    liked_by = UserSerializer(many=True, read_only=True)  # Liked users
     chat = ChatSerializer(required=False)
     likes_count = serializers.SerializerMethodField()
 

@@ -1,14 +1,16 @@
         
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from channels.db import database_sync_to_async
-# from djangochannelsrestframework.observer import ObserverModelInstanceMixin
 from djangochannelsrestframework.generics import GenericAsyncAPIConsumer
 from djangochannelsrestframework.observer.generics import ObserverModelInstanceMixin
 from django.contrib.auth.models import AnonymousUser
+from django.utils import timezone
 from djangochannelsrestframework.observer.generics import action
 
+from datetime import datetime
+
 from user.models import User
-from .models import Chat, ChatParticipant, Message
+from .models import Chat, ChatParticipant, Message, ScheduledMessage
 from .serializers import ChatSerializer, MessageSerializer, UserSerializer
 
 # ChatConsumer WebSocket orqali muloqot qilish va foydalanuvchilar o'rtasidagi suhbatni boshqarish uchun ishlatiladi
@@ -191,6 +193,38 @@ class ChatConsumer(ObserverModelInstanceMixin, GenericAsyncAPIConsumer, AsyncJso
         scheduled_time = data.get("scheduled_time")
         if scheduled_time:
             await self.save_scheduled_message(chat, user, data)
+
+    async def save_scheduled_message(self, chat, user, data):
+        # Extract necessary fields from data
+        message_content = data.get("text")  # Assuming 'text' is the key for the message content
+        scheduled_time = data.get("scheduled_time")
+
+        # Validate the scheduled time
+        if not scheduled_time:
+            return {"error": "Scheduled time is required."}
+
+        # Convert scheduled_time to a datetime object if it's in string format
+        try:
+            scheduled_time = datetime.fromisoformat(scheduled_time)  # Adjust parsing as needed
+        except ValueError:
+            return {"error": "Invalid scheduled time format."}
+
+        # Check if the scheduled time is in the future
+        if scheduled_time <= timezone.now():
+            return {"error": "Scheduled time must be in the future."}
+
+        # Create a new ScheduledMessage instance
+        scheduled_message = ScheduledMessage(
+            chat=chat,
+            sender=user,
+            text=message_content,
+            scheduled_time=scheduled_time
+        )
+
+        # Save the scheduled message to the database
+        await scheduled_message.save()
+
+        return {"success": True, "message_id": scheduled_message.id}
 
 
     @database_sync_to_async
