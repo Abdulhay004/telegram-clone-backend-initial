@@ -5,7 +5,12 @@ from djangochannelsrestframework.observer.generics import action
 from django.contrib.auth.models import AnonymousUser
 import json
 
-from .models import Group, GroupParticipant, User, GroupMessage, GroupPermission
+from datetime import datetime
+from django.utils import timezone
+
+from .models import (
+    Group, GroupParticipant, User, GroupMessage,
+    GroupPermission, GroupScheduledMessage)
 from .serializers import GroupMessageSerializer, UserSerializer
 
 # GroupConsumer Websocket uchun ishlaydigan Consumer bo'lib,guruhdagi foydalanuvchilarni boshqaradi.
@@ -205,5 +210,48 @@ class GroupConsumer(GenericAsyncAPIConsumer,AsyncJsonWebsocketConsumer):
     @database_sync_to_async
     def serialize_message(self,message):
         return GroupMessageSerializer(message).data
+
+    @action()
+    async def schedule_message(self, pk, data, **kwargs):
+        group = await self.get_group(pk)
+        if not group:
+            return
+        user = self.scope["user"]
+        scheduled_time = data.get("scheduled_time")
+        if scheduled_time:
+            await self.save_scheduled_message(group, user, data)
+
+    @database_sync_to_async
+    async def save_scheduled_message(self, group: Group, user: User, data: dict):
+        # Extract necessary fields from data
+        message_content = data.get("text")  # Assuming 'text' is the key for the message content
+        scheduled_time = data.get("scheduled_time")
+
+        # Validate the scheduled time
+        if not scheduled_time:
+            return {"error": "Scheduled time is required."}
+
+        # Convert scheduled_time to a datetime object if it's in string format
+        try:
+            scheduled_time = datetime.fromisoformat(scheduled_time)  # Adjust parsing as needed
+        except ValueError:
+            return {"error": "Invalid scheduled time format."}
+
+        # Check if the scheduled time is in the future
+        if scheduled_time <= timezone.now():
+            return {"error": "Scheduled time must be in the future."}
+
+        # Create a new ScheduledMessage instance
+        scheduled_message = GroupScheduledMessage(
+            group=group,
+            sender=user,
+            text=message_content,
+            scheduled_time=scheduled_time
+        )
+
+        # Save the scheduled message to the database
+        await scheduled_message.save()
+
+        return {"success": True, "message_id": scheduled_message.id}
 
 

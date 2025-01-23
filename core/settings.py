@@ -309,6 +309,10 @@ CELERY_BEAT_SCHEDULE = {
         "task": "chat.tasks.send_scheduled_message",
         "schedule": 10.0,
     },
+    "send-group-scheduled-message": {
+        "task": "group.tasks.send_group_scheduled_message",
+        "schedule": 10.0,
+    },
 }
 
 # SENTRY SDK

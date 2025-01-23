@@ -141,4 +141,24 @@ class GroupMessageView(generics.ListCreateAPIView):
    def perform_create(self, serializer):
        group=self.get_object()
        sender = self.request.user
-       serializer.save(group=group,sender=sender)
+       message = serializer.save(group=group,sender=sender)
+
+       if message.file or message.image:
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f'group_{message.group.id}',
+                {
+                    'type': 'send_message',
+                    'message': {
+                        'id': str(message.id),
+                        'group': message.group.id,
+                        'sender': message.sender.id,
+                        'text': message.text,
+                        'image': message.image.url if message.image else None,
+                        'file': message.file.url if message.file else None,
+                        'sent_at': message.sent_at.isoformat(),
+                        'is_read': message.is_read,
+                        'liked_by': list(message.liked_by.values_list('id', flat=True)),
+                    }
+                }
+            )
