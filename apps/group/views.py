@@ -2,12 +2,21 @@ from rest_framework import generics,status
 from rest_framework.exceptions import PermissionDenied, NotAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import Group, GroupPermission
+from .models import Group, GroupPermission, GroupMessage
 from .serializers import (
     GroupSerializer, GroupPermissionsSerializer,
-    GroupMembersSerializer)
+    GroupMembersSerializer, GroupMessageSerializer)
 from .paginations import CustomPagination
-from .permissions import IsOwnerOrReadOnly, IsAuthenticated
+from .permissions import IsOwnerOrReadOnly, IsAuthenticated, IsGroupSendMedia
+
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+
+from django.db import transaction
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 class GroupListCreateView(generics.ListCreateAPIView):
     queryset = Group.objects.all()
@@ -114,3 +123,22 @@ class GroupMembersView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class GroupMessageView(generics.ListCreateAPIView):
+   queryset = Group.objects.all()
+   serializer_class = GroupMessageSerializer
+   permission_classes = [IsAuthenticated, IsGroupSendMedia]
+   pagination_class = CustomPagination
+   lookup_url_kwarg = 'pk'
+
+   def list(self, request, *args, **kwargs):
+       group = self.get_object()
+       if not group:
+           return Response(data={"detail":"Group Not Found"},status=status.HTTP_404_NOT_FOUND)
+       serializer = self.get_serializer(group.messages.all(),many=True)
+       return Response(serializer.data)
+
+   def perform_create(self, serializer):
+       group=self.get_object()
+       sender = self.request.user
+       serializer.save(group=group,sender=sender)

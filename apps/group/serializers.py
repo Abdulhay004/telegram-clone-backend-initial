@@ -45,3 +45,6 @@ class GroupMessageSerializer(serializers.ModelSerializer):
 
     def get_like_count(self, obj):
         return obj.liked_by.count()
+
+    def create(self, validated_data):
+        return GroupMessage.objects.create(**validated_data)

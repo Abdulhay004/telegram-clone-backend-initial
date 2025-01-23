@@ -27,7 +27,7 @@ class GroupParticipant(models.Model):
         return f"{self.user.username} in {self.group.name}"
 
 class GroupMessage(models.Model):
-    id = models.AutoField(primary_key=True)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     group = models.ForeignKey(Group, related_name='messages', on_delete=models.CASCADE)
     sender = models.ForeignKey(User, on_delete=models.SET('delete_user'), related_name='send_messages')
     text = models.TextField(null=True, blank=True)
