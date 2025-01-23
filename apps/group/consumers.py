@@ -11,7 +11,7 @@ from django.utils import timezone
 from .models import (
     Group, GroupParticipant, User, GroupMessage,
     GroupPermission, GroupScheduledMessage)
-from .serializers import GroupMessageSerializer, UserSerializer
+from .serializers import GroupMessageSerializer, UserSerializer, GroupSerializer
 
 # GroupConsumer Websocket uchun ishlaydigan Consumer bo'lib,guruhdagi foydalanuvchilarni boshqaradi.
 class GroupConsumer(GenericAsyncAPIConsumer,AsyncJsonWebsocketConsumer):
@@ -221,7 +221,7 @@ class GroupConsumer(GenericAsyncAPIConsumer,AsyncJsonWebsocketConsumer):
         if scheduled_time:
             await self.save_scheduled_message(group, user, data)
 
-    @database_sync_to_async
+    # @database_sync_to_async
     async def save_scheduled_message(self, group: Group, user: User, data: dict):
         # Extract necessary fields from data
         message_content = data.get("text")  # Assuming 'text' is the key for the message content
@@ -253,5 +253,58 @@ class GroupConsumer(GenericAsyncAPIConsumer,AsyncJsonWebsocketConsumer):
         await scheduled_message.save()
 
         return {"success": True, "message_id": scheduled_message.id}
+
+    async def message_liked(self, event):
+        await self.send_json({"action": "message_liked", "data": event["message"]})
+
+    async def message_unliked(self, event):
+        await self.send_json({"action": "message_unliked", "data": event["message"]})
+
+    @action()
+    async def like_message(self, message_id, **kwargs):
+        user = self.scope["user"]
+        message = await self.get_message(message_id)
+        if message:
+            await self.add_like(message, user)
+            serialized_message = await self.serialize_message(message)
+            await self.channel_layer.group_send(
+                f"group__{message.group.id}",
+                {"type": "message_liked", "message": serialized_message},
+            )
+        else:
+            # Xato holatni qayta ishlash
+            await self.send_json({"action": "error", "message": "Message not found."})
+
+    @action()
+    async def unlike_message(self, message_id, **kwargs):
+        user = self.scope["user"]
+        message = await self.get_message(message_id)
+        if message:
+            await self.remove_like(message, user)
+            serialized_message = await self.serialize_message(message)
+            await self.channel_layer.group_send(
+                f"group__{message.group.id}",
+                {"type": "message_unliked", "message": serialized_message},
+            )
+        else:
+            # Xato holatni qayta ishlash
+            await self.send_json({"action": "error", "message": "Message not found."})
+
+    @database_sync_to_async
+    def add_like(self, message, user):
+        message.liked_by.add(user)
+        message.save()
+
+    @database_sync_to_async
+    def remove_like(self, message, user):
+        message.liked_by.remove(user)
+        message.save()
+
+    @database_sync_to_async
+    def get_message(self, message_id):
+         try:
+             return GroupMessage.objects.get(id=message_id)
+         except GroupMessage.DoesNotExist:
+             return None
 
 
