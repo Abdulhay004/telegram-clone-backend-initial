@@ -1,10 +1,10 @@
 from rest_framework import serializers
-from .models import Group, GroupPermission, User, GroupMessage
+from .models import Group, GroupPermission, GroupMessage, User
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "phone_number", "user_name", "bio", "birth_date", "first_name", "last_name"]
+        fields = ["id", "phone_number", "user_name", "bio", 'is_online', "birth_date"]
 
 class GroupSerializer(serializers.ModelSerializer):
     owner = UserSerializer(required=False)
@@ -41,7 +41,7 @@ class GroupMessageSerializer(serializers.ModelSerializer):
     likes_count = serializers.SerializerMethodField()
     class Meta:
         model = GroupMessage
-        fields = ['id','group','sender','text','image','file','sent_at','is_read','liked_by','likes_count']
+        fields = ['id','group','sender','text','image','file', 'sent_at','is_read','liked_by','likes_count']
         read_only_fields = ['liked_by']
 
     def get_likes_count(self,obj):

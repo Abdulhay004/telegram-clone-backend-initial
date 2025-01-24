@@ -3,10 +3,11 @@ from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from djangochannelsrestframework.generics import GenericAsyncAPIConsumer
 from djangochannelsrestframework.observer.generics import action
 from django.contrib.auth.models import AnonymousUser
-import json
+from asgiref.sync import sync_to_async
 
 from datetime import datetime
 from django.utils import timezone
+from share.tasks import send_push_notification
 
 from .models import (
     Group, GroupParticipant, User, GroupMessage,
@@ -193,6 +194,37 @@ class GroupConsumer(GenericAsyncAPIConsumer,AsyncJsonWebsocketConsumer):
             }
         )
 
+        group_members = await self.get_group_members()
+        for member_data in group_members:
+            user = await self.get_user(member_data["id"])
+
+            if user.is_online is False:
+                try:
+                    user_notification_pref = await sync_to_async(
+                        lambda: user.notification_preference.first()
+                    )()
+                    if (
+                        user_notification_pref is not None
+                        and user_notification_pref.notifications_enabled
+                    ):
+                        device_token = await sync_to_async(
+                            lambda: user_notification_pref.device_token
+                        )()
+                        send_push_notification.delay(
+                            token=device_token,
+                            title="New Message in Group",
+                            body=message.text,
+                        )
+                except Exception as e:
+                    print(f"Error: {e}")
+
+    @sync_to_async
+    def get_user(self, user_id):
+        try:
+            user = User.objects.get(id=user_id)
+            return user
+        except User.DoesNotExist:
+            return None
     # Xabarni qabul qiluvchi handler
     async def group_message(self, event):
         """Guruhdagi xabarni mijozlarga yuborish"""

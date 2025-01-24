@@ -11,6 +11,10 @@ from pathlib import Path
 from django.utils.translation import gettext_lazy as _
 from decouple import config
 
+import firebase_admin
+from firebase_admin import credentials
+
+
 
 SENTRY_SDK="https://43f88d64a18e48a7307150c375c4b55e@o4508489036201984.ingest.us.sentry.io/4508489040396288"
 # BASE
@@ -338,7 +342,8 @@ sentry_sdk.init(
 
 # FIREBASE
 # -----------------------------------------------------------------------------------------
-
+cred = credentials.Certificate("path/to/serviceAccountKey.json")
+firebase_admin.initialize_app(cred)
 
 # SMS API
 # -----------------------------------------------------------------------------------------
