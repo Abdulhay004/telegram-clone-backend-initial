@@ -352,3 +352,5 @@ tests/.pytest_cache
 .pytest_cache
 celerybeat-schedule.db
 *.db
+
+path/
