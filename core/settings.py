@@ -342,7 +342,8 @@ sentry_sdk.init(
 
 # FIREBASE
 # -----------------------------------------------------------------------------------------
-cred = credentials.Certificate("path/to/serviceAccountKey.json")
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+cred = credentials.Certificate(os.path.join(BASE_DIR, 'serviceAccountKey.json'))
 firebase_admin.initialize_app(cred)
 
 # SMS API
