@@ -1,6 +1,8 @@
 from django.db import models
 from user.models import User
 
+from share.models import BaseScheduledMessageModel, BaseMessageModel
+
 import uuid
 
 class Chat(models.Model):
@@ -26,20 +28,16 @@ class ChatParticipant(models.Model):
     class Meta:
         unique_together = ["user", "chat"]
 
-class Message(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+class Message(BaseMessageModel):
     chat = models.ForeignKey(Chat, related_name='messages', on_delete=models.CASCADE)
     sender = models.ForeignKey(User, on_delete=models.CASCADE)
-    text = models.TextField(blank=True, null=True)
     image = models.ImageField(upload_to='messages/images/', blank=True, null=True)
     file = models.FileField(upload_to='messages/files/', blank=True, null=True)
-    sent_at = models.DateTimeField(auto_now_add=True)
     is_read = models.BooleanField(default=False)
     liked_by = models.ManyToManyField(User, related_name='liked_messages', blank=True)
 
-class ScheduledMessage(models.Model):
+
+class ScheduledMessage(BaseScheduledMessageModel):
     chat = models.ForeignKey(Chat, related_name='scheduled_messages', on_delete=models.CASCADE)
     sender = models.ForeignKey(User, on_delete=models.CASCADE)
-    text = models.TextField()
-    scheduled_time = models.DateTimeField()
-    sent = models.BooleanField(default=False)
+
