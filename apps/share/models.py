@@ -2,7 +2,6 @@ from django.db import models
 from datetime import datetime, timedelta
 from django.utils import timezone
 import uuid
-import pytz
 
 class BaseModel(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
