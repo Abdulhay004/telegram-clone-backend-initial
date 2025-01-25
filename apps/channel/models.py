@@ -65,7 +65,4 @@ class ChannelScheduledMessage(BaseScheduledMessageModel):
     image = models.ImageField(upload_to='images/', blank=True, null=True)
     file = models.FileField(upload_to='files/', blank=True, null=True)
 
-    def __str__(self):
-        return f"Scheduled message from {self.sender.username} in {self.channel.name} at {self.scheduled_time}"
-
 

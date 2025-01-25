@@ -1,5 +1,7 @@
 from django.db import models
+from datetime import datetime, timedelta
 import uuid
+import pytz
 
 class BaseModel(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -38,5 +40,12 @@ class BaseScheduledMessageModel(models.Model):
 
     class Meta:
         abstract = True
+
+    def save(self, *args, **kwargs):
+        # scheduled_time ni UTC ga aylantirish
+        if not isinstance(self.scheduled_time, str):
+            if self.scheduled_time and self.scheduled_time.tzinfo is None:
+                self.scheduled_time = self.scheduled_time.replace()
+        super().save(*args, **kwargs)
 
 
