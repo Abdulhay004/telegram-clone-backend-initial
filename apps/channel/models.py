@@ -9,15 +9,11 @@ from share.models import (
     BaseModel, BaseMessageModel,
     BaseScheduledMessageModel, BaseStartModel)
 
-class Channel(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=255)
+class Channel(BaseModel):
+    name = models.CharField(max_length=50)
     description = models.TextField()
-    owner = models.ForeignKey(User, on_delete=models.CASCADE)  # 'auth.User' - Django foydalanuvchi modeli
+    owner = models.ForeignKey(User,on_delete=models.CASCADE)
     type = models.CharField(max_length=30,choices=ChannelType.choices(),default=ChannelType.PUBLIC.value)
-
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     @property
     def channel_type(self):
@@ -33,20 +29,11 @@ class Channel(models.Model):
     def __str__(self):
         return self.name
 
-class ChannelMembership(models.Model):
-    # channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
-    # user = models.ForeignKey(User, on_delete=models.CASCADE)
-    role = models.CharField(max_length=6, choices=ChannelMembershipType.choices(), default=ChannelMembershipType.MEMBER.value)
-    # joined_at = models.DateTimeField(auto_now_add=True)
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+class ChannelMembership(BaseStartModel):
     channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)  # 'auth.User' - Django foydalanuvchi modeli
-    # role = models.CharField(max_length=6, choices=ROLE_CHOICES)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    role = models.CharField(max_length=6, choices=ChannelMembershipType.choices(), default=ChannelMembershipType.MEMBER.value)
     joined_at = models.DateTimeField(auto_now_add=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
 
     class Meta:
         db_table = 'channelMembership'
@@ -55,23 +42,12 @@ class ChannelMembership(models.Model):
         ordering = ['-created_at']
         unique_together = ('channel', 'user')
 
-class ChannelMessage(models.Model):
-    # channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
-    # sender = models.ForeignKey(User, on_delete=models.CASCADE)
-    # image = models.ImageField(upload_to='images/', blank=True, null=True)
-    # file = models.FileField(upload_to='files/', blank=True, null=True)
-    # likes = models.ManyToManyField(User, related_name='liked_channel_messages', blank=True)
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+class ChannelMessage(BaseMessageModel):
     channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
-    sender = models.ForeignKey(User, on_delete=models.CASCADE)  # 'auth.User' - Django foydalanuvchi modeli
-    text = models.TextField()
+    sender = models.ForeignKey(User, on_delete=models.CASCADE)
     image = models.ImageField(upload_to='images/', blank=True, null=True)
     file = models.FileField(upload_to='files/', blank=True, null=True)
-    sent_at = models.DateTimeField(auto_now_add=True)
-    likes = models.ManyToManyField(User, related_name='liked_channel_messages', blank=True)  # Foydalanuvchilar uchun layk
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    likes = models.ManyToManyField(User, related_name='liked_channel_messages', blank=True)
 
     @property
     def media(self):
@@ -80,20 +56,10 @@ class ChannelMessage(models.Model):
     def __str__(self):
         return f"Message from {self.sender.username} in {self.channel.name}"
 
-class ChannelScheduledMessage(models.Model):
-    # channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
-    # sender = models.ForeignKey(User, on_delete=models.CASCADE)
-    # image = models.ImageField(upload_to='images/', blank=True, null=True)
-    # file = models.FileField(upload_to='files/', blank=True, null=True)
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+class ChannelScheduledMessage(BaseScheduledMessageModel):
     channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
-    sender = models.ForeignKey(User, on_delete=models.CASCADE)  # 'auth.User' - Django foydalanuvchi modeli
-    text = models.TextField()
+    sender = models.ForeignKey(User, on_delete=models.CASCADE)
     image = models.ImageField(upload_to='images/', blank=True, null=True)
     file = models.FileField(upload_to='files/', blank=True, null=True)
-    scheduled_time = models.DateTimeField()
-    sent = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+
 
