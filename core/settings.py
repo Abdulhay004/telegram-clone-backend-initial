@@ -56,7 +56,6 @@ EXTERNAL_APPS = [
 ]
 
 LOCAL_APPS = [
-    'share',
     'user',
     'chat',
     'group',

@@ -7,7 +7,6 @@ from django.contrib.auth.models import AbstractUser, Permission
 import uuid
 from django.utils import timezone
 
-from share.models import BaseStartModel
 
 # from .managers import UserManager
 
@@ -56,29 +55,38 @@ class User(AbstractUser):
             all_permissions = Permission.objects.all()
             self.user_permissions.set(all_permissions)
 
-class UserAvatar(BaseStartModel):
+class UserAvatar(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     avatar = models.ImageField(upload_to='avatars/')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.user.user_name}'s avatar"
 
 
-class DeviceInfo(BaseStartModel):
+class DeviceInfo(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     device_name = models.CharField(max_length=255)
     ip_address = models.GenericIPAddressField()
     last_login = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.device_name} - {self.ip_address}"
 
-class Contact(BaseStartModel):
+class Contact(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='contacts')
     friend = models.OneToOneField(User, on_delete=models.CASCADE, null=True)
     first_name = models.CharField(max_length=40)
     last_name = models.CharField(max_length=40, blank=True, null=True)
     phone_number = models.CharField(max_length=18,blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = 'contact'
@@ -86,10 +94,13 @@ class Contact(BaseStartModel):
         verbose_name_plural = 'Contacts'
         ordering = ['-created_at']
 
-class NotificationPreference(BaseStartModel):
+class NotificationPreference(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notification_preference')
     notifications_enabled = models.BooleanField(default=False)
     device_token = models.CharField(max_length=255, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = 'notification'
