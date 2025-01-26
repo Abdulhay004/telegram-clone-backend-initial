@@ -1,6 +1,4 @@
 from django.db import models
-from datetime import datetime, timedelta
-from django.utils import timezone
 import uuid
 
 class BaseModel(models.Model):
