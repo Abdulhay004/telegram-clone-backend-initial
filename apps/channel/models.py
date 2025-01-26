@@ -31,7 +31,7 @@ class Channel(models.Model):
 
 class ChannelMembership(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
+    channel = models.ForeignKey(Channel, on_delete=models.CASCADE, related_name='memberships')
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     role = models.CharField(max_length=6, choices=ChannelMembershipType.choices(), default=ChannelMembershipType.MEMBER.value)
     created_at = models.DateTimeField(auto_now_add=True)
