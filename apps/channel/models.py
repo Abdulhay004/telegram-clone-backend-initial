@@ -77,6 +77,9 @@ class ChannelMessage(models.Model):
     def media(self):
         return self.image or self.file
 
+    def __str__(self):
+        return f"Message from {self.sender.username} in {self.channel.name}"
+
 class ChannelScheduledMessage(models.Model):
     # channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
     # sender = models.ForeignKey(User, on_delete=models.CASCADE)
