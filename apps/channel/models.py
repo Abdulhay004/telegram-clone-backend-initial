@@ -24,6 +24,7 @@ class Channel(BaseModel):
         verbose_name_plural='Channels'
         ordering = ['-created_at']
         unique_together = ('name', 'owner')
+        abstract = True
 
     def __str__(self):
         return self.name
@@ -43,6 +44,7 @@ class ChannelMembership(BaseStartModel):
         verbose_name_plural='ChannelMemberships'
         ordering = ['-created_at']
         unique_together = ('channel', 'user')
+        abstract = True
 
 class ChannelMessage(BaseMessageModel):
     channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
