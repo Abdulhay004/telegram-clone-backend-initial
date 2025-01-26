@@ -35,6 +35,9 @@ class ChannelMembership(BaseStartModel):
     role = models.CharField(max_length=6, choices=ChannelMembershipType.choices(), default=ChannelMembershipType.MEMBER.value)
     joined_at = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return f"{self.user.username} in {self.channel.name}"
+
     class Meta:
         db_table = 'channelMembership'
         verbose_name='ChannelMembership'
@@ -56,10 +59,17 @@ class ChannelMessage(BaseMessageModel):
     def __str__(self):
         return f"Message from {self.sender.username} in {self.channel.name}"
 
-class ChannelScheduledMessage(BaseScheduledMessageModel):
+class ChannelScheduledMessage(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    text = models.TextField()
+    scheduled_time =  models.DateTimeField()
+    sent = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
     sender = models.ForeignKey(User, on_delete=models.CASCADE)
     image = models.ImageField(upload_to='images/', blank=True, null=True)
     file = models.FileField(upload_to='files/', blank=True, null=True)
+
 
 
