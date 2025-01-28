@@ -1,12 +1,16 @@
-from rest_framework import generics,status,  serializers
+from rest_framework import generics,status,  serializers, viewsets
 from rest_framework.exceptions import PermissionDenied, NotAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import Channel, ChannelMembership, User
+from .models import Channel, ChannelMembership, User, ChannelMessage
 from .serializers import (
-    ChannelSerializer, MembershipSerializer)
+    ChannelSerializer, MembershipSerializer,
+    MessageSerializer)
 
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
+
+from share.tasks import send_push_notification
 
 from .permissions import IsOwnerOrReadOnly
 from .paginations import CustomPagination
@@ -78,4 +82,49 @@ class MembershipDetailView(generics.RetrieveUpdateDestroyAPIView):
 
         def perform_destroy(self, instance):
             instance.delete()
+
+class MessageViewSet(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
+
+    def list(self, request, channel_id=None):
+        channel = get_object_or_404(Channel, id=channel_id)
+        messages = channel.messages.all()
+        serializer = MessageSerializer(messages, many=True)
+        return Response({"results": serializer.data})
+
+    def create(self, request, channel_id=None):
+        channel = get_object_or_404(Channel, id=channel_id)
+        member = ChannelMembership.objects.filter(channel=channel).first()
+        if channel.owner != request.user:
+            raise PermissionDenied('You do not have permission to create messages in this channel.')
+        serializer = MessageSerializer(data=request.data)
+        if serializer.is_valid():
+            message = serializer.save(channel=channel, sender=request.user)
+            send_push_notification.delay(str(member.user.id), f"New Message in {channel.name}", message.text)
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)
+
+    def retrieve(self, request, channel_id=None, message_id=None):
+        message = get_object_or_404(ChannelMessage, id=message_id, channel__id=channel_id)
+        serializer = MessageSerializer(message)
+        return Response(serializer.data)
+
+    def partial_update(self, request, channel_id=None, message_id=None):
+        message = get_object_or_404(ChannelMessage, id=message_id, channel__id=channel_id)
+        if message.channel.owner != request.user:
+            raise PermissionDenied('You do not have permission to update this message.')
+
+        serializer = MessageSerializer(message, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=400)
+
+    def destroy(self, request, channel_id=None, message_id=None):
+        message = get_object_or_404(ChannelMessage, id=message_id, channel__id=channel_id)
+        if message.channel.owner != request.user:
+            raise PermissionDenied('You do not have permission to delete this message.')
+
+        message.delete()
+        return Response(status=204)
 

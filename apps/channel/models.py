@@ -48,7 +48,7 @@ class ChannelMessage(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     text = models.TextField(null=True, blank=True)
     sent_at = models.DateTimeField(auto_now_add=True)
-    channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
+    channel = models.ForeignKey(Channel, on_delete=models.CASCADE, related_name='messages')
     sender = models.ForeignKey(User, on_delete=models.CASCADE)
     image = models.ImageField(upload_to='images/', blank=True, null=True)
     file = models.FileField(upload_to='files/', blank=True, null=True)
