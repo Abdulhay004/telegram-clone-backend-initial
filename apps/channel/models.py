@@ -11,13 +11,9 @@ class Channel(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField()
     owner = models.ForeignKey(User,on_delete=models.CASCADE)
-    type = models.CharField(max_length=30,choices=ChannelType.choices(),default=ChannelType.PUBLIC.value)
+    channel_type = models.CharField(max_length=30,choices=ChannelType.choices(),default=ChannelType.PUBLIC.value)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-    @property
-    def channel_type(self):
-        return ChannelType(self.type).value
 
     class Meta:
         db_table = 'channel'

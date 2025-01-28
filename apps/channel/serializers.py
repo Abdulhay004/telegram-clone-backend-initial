@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import Channel, User
+from .models import Channel, ChannelMembership
+from user.models import User
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -12,3 +13,11 @@ class ChannelSerializer(serializers.ModelSerializer):
         model = Channel
         fields = ['id', 'name', 'description', 'channel_type', 'owner', 'created_at', 'updated_at']
         read_only_fields = ['owner', 'description']
+
+class MembershipSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+
+    class Meta:
+        model = ChannelMembership
+        fields = ['id', 'user', 'role', 'joined_at']
+        read_only_field = ['user']
