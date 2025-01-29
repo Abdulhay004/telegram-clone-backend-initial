@@ -370,8 +370,8 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 # -----------------------------------------------------------------------------------------
 ELASTICSEARCH_DSL = {
     'default': {
-        # 'hosts': 'localhost:9200'  # Elasticsearch serveringiz manzili
-        'hosts': 'http://elasticsearch:9200',  # Elasticsearch serveringiz manzili
+        'hosts': 'localhost:9200'  # Elasticsearch serveringiz manzili
+        # 'hosts': 'http://elasticsearch:9200',  # Elasticsearch serveringiz manzili
     },
 }
 
