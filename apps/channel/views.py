@@ -140,4 +140,5 @@ class ScheduleMessageView(generics.CreateAPIView):
         if channel.owner != user:
             raise PermissionDenied("You do not have permission to schedule messages.")
         serializer.save(channel=channel, sender=user)
+        send_channel_scheduled_message.delay()
 
