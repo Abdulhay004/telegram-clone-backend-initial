@@ -30,7 +30,7 @@ SECRET_KEY = "django-insecure-z#9g^u)aoa1*+i#_mpt8&%&wm$4vg6)k(=h++$ftljnbds^1)m
 
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 # APPS
 # -----------------------------------------------------------------------------------------
@@ -370,8 +370,7 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 # -----------------------------------------------------------------------------------------
 ELASTICSEARCH_DSL = {
     'default': {
-        'hosts': 'localhost:9200'  # Elasticsearch serveringiz manzili
-        # 'hosts': 'http://elasticsearch:9200',  # Elasticsearch serveringiz manzili
+        'hosts': 'http://elasticsearch:9200/',
     },
 }
 
