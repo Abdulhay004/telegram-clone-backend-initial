@@ -31,12 +31,18 @@ distlib==0.3.9
 Django==4.2.16
 django-celery-beat==2.7.0
 django-debug-toolbar==4.4.5
+django-elasticsearch-dsl==8.0
+django-elasticsearch-dsl-drf==0.22.5
+django-nine==0.2.7
 django-redis==5.4.0
 django-timezone-field==7.0
 djangochannelsrestframework==1.2.0
 djangorestframework==3.15.2
 djangorestframework-simplejwt==5.3.1
 drf-spectacular==0.28.0
+elastic-transport==8.17.0
+elasticsearch==8.0.0
+elasticsearch-dsl==8.12.0
 exceptiongroup==1.2.2
 factory-boy==3.3.0
 Faker==25.9.2
@@ -103,6 +109,7 @@ pytest-redis==3.1.2
 python-crontab==3.2.0
 python-dateutil==2.9.0.post0
 python-decouple==3.8
+pytz==2024.2
 PyYAML==6.0.2
 redis==5.0.7
 referencing==0.35.1

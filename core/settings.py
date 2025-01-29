@@ -53,6 +53,7 @@ EXTERNAL_APPS = [
     'debug_toolbar',
     'channels',
     'djangochannelsrestframework',
+    'django_elasticsearch_dsl',
 ]
 
 LOCAL_APPS = [
@@ -367,7 +368,13 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 
 # ELASTICSEARCH
 # -----------------------------------------------------------------------------------------
+ELASTICSEARCH_DSL = {
+    'default': {
+        # 'hosts': 'localhost:9200'  # Elasticsearch serveringiz manzili
+        'hosts': 'http://elasticsearch:9200',  # Elasticsearch serveringiz manzili
+    },
+}
 
-
+ENABLE_ES = config("ENABLE_ES", default=False, cast=bool)
 # LOGGING
 # -----------------------------------------------------------------------------------------
