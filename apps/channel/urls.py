@@ -22,4 +22,5 @@ urlpatterns = [
     path('<uuid:channel_id>/messages/', message_list, name='message-list'),
     path('<uuid:channel_id>/messages/<uuid:message_id>/', message_detail, name='message-detail'),
     path('<uuid:channel_id>/messages/schedule/', views.ScheduleMessageView.as_view(), name='schedule-message'),
+    path('<uuid:channel_id>/messages/<uuid:message_id>/like/', views.LikeRemoveMessageView.as_view(), name='like_and_remove_message'),
 ]

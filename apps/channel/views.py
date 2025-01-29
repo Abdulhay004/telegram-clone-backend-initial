@@ -142,3 +142,26 @@ class ScheduleMessageView(generics.CreateAPIView):
         serializer.save(channel=channel, sender=user)
         send_channel_scheduled_message.delay()
 
+class LikeRemoveMessageView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, channel_id, message_id):
+        try:
+            message = ChannelMessage.objects.get(id=message_id, channel_id=channel_id)
+        except ChannelMessage.DoesNotExist:
+            return Response({"detail": "Message not found."}, status=status.HTTP_404_NOT_FOUND)
+        if request.user in message.likes.all():
+            return Response({"detail": "Message already liked."}, status=status.HTTP_400_BAD_REQUEST)
+        message.likes.add(request.user)
+        return Response({"detail": "Message liked."}, status=status.HTTP_200_OK)
+
+    def delete(self, request, channel_id, message_id):
+        try:
+            message = ChannelMessage.objects.get(id=message_id, channel_id=channel_id)
+        except ChannelMessage.DoesNotExist:
+            return Response({"detail": "Message not found."}, status=status.HTTP_404_NOT_FOUND)
+        if request.user not in message.likes.all():
+            return Response({"detail": "Like not found."}, status=status.HTTP_404_NOT_FOUND)
+        message.likes.remove(request.user)
+        return Response({"detail": "Like removed."}, status=status.HTTP_200_OK)
+
