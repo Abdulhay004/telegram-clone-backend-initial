@@ -2,15 +2,16 @@ from rest_framework import generics,status,  serializers, viewsets
 from rest_framework.exceptions import PermissionDenied, NotAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import Channel, ChannelMembership, User, ChannelMessage
+from .models import Channel, ChannelMembership, User, ChannelMessage, ChannelScheduledMessage
 from .serializers import (
     ChannelSerializer, MembershipSerializer,
-    MessageSerializer)
+    MessageSerializer, ScheduledMessageSerializer)
 
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 
 from share.tasks import send_push_notification
+from .tasks import send_channel_scheduled_message
 
 from .permissions import IsOwnerOrReadOnly
 from .paginations import CustomPagination
@@ -127,4 +128,17 @@ class MessageViewSet(viewsets.ViewSet):
 
         message.delete()
         return Response(status=204)
+
+class ScheduleMessageView(generics.CreateAPIView):
+    queryset = ChannelScheduledMessage.objects.all()
+    serializer_class = ScheduledMessageSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        channel = Channel.objects.get(owner=self.request.user)
+        user = self.request.user
+        if channel.owner != user:
+            raise PermissionDenied("You do not have permission to schedule messages.")
+        serializer.save(channel=channel, sender=user)
+        send_channel_scheduled_message.delay()
 

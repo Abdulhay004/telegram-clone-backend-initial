@@ -1,6 +1,8 @@
 from rest_framework import serializers
-from .models import Channel, ChannelMembership, ChannelMessage
+from .models import Channel, ChannelMembership, ChannelMessage, ChannelScheduledMessage
 from user.models import User
+
+from django.utils import timezone
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -37,3 +39,15 @@ class MessageSerializer(serializers.ModelSerializer):
         representation['image'] = instance.image.url if instance.image else None
         representation['media'] = representation['image'] or representation['file']
         return representation
+
+class ScheduledMessageSerializer(serializers.ModelSerializer):
+    channel = ChannelSerializer(read_only=True)
+    class Meta:
+        model = ChannelScheduledMessage
+        fields = ['id', 'channel', 'text', 'file', 'scheduled_time', 'created_at']
+        read_only_fields = ['id', 'channel', 'created_at']
+
+    def validate_scheduled_time(self, value):
+        if value < timezone.now():
+            raise serializers.ValidationError("Scheduled time must be in the future.")
+        return value

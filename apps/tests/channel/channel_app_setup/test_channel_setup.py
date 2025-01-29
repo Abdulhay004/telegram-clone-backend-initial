@@ -114,7 +114,6 @@ def test_channel_scheduled_message_creation(user_factory):
         scheduled_time=scheduled_time,
     )
 
-    print(scheduled_message.scheduled_time, scheduled_time)
     assert scheduled_message.channel == channel
     assert scheduled_message.sender == user
     assert scheduled_message.text == "Scheduled message"
