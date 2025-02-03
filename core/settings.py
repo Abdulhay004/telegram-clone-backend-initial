@@ -370,7 +370,7 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 # -----------------------------------------------------------------------------------------
 ELASTICSEARCH_DSL = {
     'default': {
-        'hosts': 'http://localhost:9200',
+        'hosts': 'http://0.0.0.0:9200',
     },
 }
 
