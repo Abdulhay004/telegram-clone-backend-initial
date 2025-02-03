@@ -65,14 +65,18 @@ class ChannelMessage(models.Model):
 
 class ChannelScheduledMessage(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    text = models.TextField()
-    scheduled_time =  models.DateTimeField()
-    sent = models.BooleanField(default=False)
     channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
     sender = models.ForeignKey(User, on_delete=models.CASCADE)
-    image = models.ImageField(upload_to='images/', blank=True, null=True)
-    file = models.FileField(upload_to='files/', blank=True, null=True)
+    text = models.TextField(blank=True, null=True)
+    scheduled_time =  models.DateTimeField()
+    sent = models.BooleanField(default=False)
+    image = models.ImageField(upload_to='channel/messages/images/', blank=True, null=True)
+    file = models.FileField(upload_to='channel/messages/files/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'channel_scheduled_message'
+        ordering = ['-created_at']
 
 

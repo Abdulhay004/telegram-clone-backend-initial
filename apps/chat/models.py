@@ -42,11 +42,16 @@ class Message(models.Model):
 
 class ScheduledMessage(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    chat = models.ForeignKey(Chat, related_name='scheduled_messages', on_delete=models.CASCADE)
+    sender = models.ForeignKey(User, related_name='scheduled_messages', on_delete=models.CASCADE)
     text = models.TextField()
     scheduled_time =  models.DateTimeField()
     sent = models.BooleanField(default=False)
-    chat = models.ForeignKey(Chat, related_name='scheduled_messages', on_delete=models.CASCADE)
-    sender = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'schedule_message'
+        verbose_name = 'Schedule Message'
+        verbose_name_plural = 'Schedule Messages'
 

@@ -4,9 +4,7 @@ from django.utils import timezone
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from celery.utils.log import get_task_logger
-
 from share.tasks import send_push_notification
-
 from .serializers import ScheduledMessageSerializer
 
 logger = get_task_logger(__name__)
@@ -22,6 +20,7 @@ def send_channel_scheduled_message():
         if not scheduled_messages.exists():
             logger.info("No scheduled messages to send.")
             return
+
         logger.info(f"Found {scheduled_messages.count()} scheduled messages to send.")
         for scheduled_message in scheduled_messages:
             message = ChannelMessage.objects.create(
@@ -33,9 +32,10 @@ def send_channel_scheduled_message():
             scheduled_message.save()
 
             for membership in scheduled_message.channel.memberships.all():
-                notification_preference = getattr(membership.user, "notification_preference", None)
+                notification_preference = getattr(membership.user, "notifications", None)
                 if notification_preference and notification_preference.notifications_enabled:
-                    send_push_notification.delay(notification_preference.device_token, f"New Message in {scheduled_message.channel.name}",
+                    send_push_notification.delay(notification_preference.device_token,
+                                                 f"New Message in {scheduled_message.channel.name}",
                                                  scheduled_message.text)
 
             logger.info(f"Message sent: {message.text}")
