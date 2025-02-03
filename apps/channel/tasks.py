@@ -32,7 +32,7 @@ def send_channel_scheduled_message():
             scheduled_message.save()
 
             for membership in scheduled_message.channel.memberships.all():
-                notification_preference = getattr(membership.user, "notifications", None)
+                notification_preference = getattr(membership.user, "notification_preference", None)
                 if notification_preference and notification_preference.notifications_enabled:
                     send_push_notification.delay(notification_preference.device_token,
                                                  f"New Message in {scheduled_message.channel.name}",
