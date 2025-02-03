@@ -19,6 +19,7 @@ urlpatterns = [
             path('chats/', include('chat.urls')),
             path('groups/', include('group.urls')),
             path('channels/', include('channel.urls')),
+            path('', include('share.urls')),
             # another apps
             path('schema/', SpectacularAPIView.as_view(), name='schema'),
             path('swagger/', SpectacularSwaggerView.as_view(), name='swagger-ui'),
