@@ -201,7 +201,7 @@ class GroupConsumer(GenericAsyncAPIConsumer,AsyncJsonWebsocketConsumer):
             if user.is_online is False:
                 try:
                     user_notification_pref = await sync_to_async(
-                        lambda: user.notification_preference.first()
+                        lambda: user.notification_preference
                     )()
                     if (
                         user_notification_pref is not None
