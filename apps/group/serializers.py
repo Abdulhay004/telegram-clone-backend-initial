@@ -4,7 +4,7 @@ from .models import Group, GroupPermission, GroupMessage, User
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "phone_number", "user_name", "bio", 'is_online', "birth_date"]
+        fields = ["id", "first_name", "phone_number", "user_name", "bio", 'is_online', "birth_date"]
 
 class GroupSerializer(serializers.ModelSerializer):
     owner = UserSerializer(required=False)
